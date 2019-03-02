@@ -1,9 +1,24 @@
 <!DOCTYPE html>
 <html lang='en'>
   <head>
+    <!-- Tab Icon info  -->
     <title>Stock Squirrel</title>
+    <link rel='shortcut icon' href='/static/squirrel.jpeg' />
+    <!-- Font links -->
+    <link href='http://fonts.googleapis.com/css?family=Ubuntu:bold' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Vollkorn' rel='stylesheet' type='text/css'>
+    <!-- Javascript styling -->
+    <script src="jquery-3.3.1.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!--- CSS styling (for later)-->
+    <link rel='stylesheet' type='text/css' href='/static/style.css' />
   </head>
   <body>
     <h1>Stock Squirrel</h1>
+    <input id='searchbox' type='text' placeholder='Type stock' />
+    <button id='searchbutton' type='button'>Enter </button>
+    <div id='stockGraph'></div>
   </body>
+  <script src='static/graph.js'></script>
+
 </html>
