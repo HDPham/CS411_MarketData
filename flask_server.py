@@ -1,7 +1,6 @@
 from flask import Flask, flash, redirect, render_template, request, session, abort
-import random
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')
 
 @app.route('/')
 @app.route('/home')
