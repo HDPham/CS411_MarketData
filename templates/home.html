@@ -8,7 +8,7 @@
     <link href='http://fonts.googleapis.com/css?family=Ubuntu:bold' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Vollkorn' rel='stylesheet' type='text/css'>
     <!-- Javascript styling -->
-    <script src="jquery-3.3.1.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <script src='/static/effects.js'></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <!--- CSS styling (for later)-->
@@ -19,7 +19,7 @@
     <input id='searchbox' type='text' placeholder='Type stock' />
     <button id='searchbutton' type='button' onclick="search()">Enter </button>
     <div id='stockGraph'></div>
-    <textarea style='width:500px;height:500px;'></textarea>
+    <textarea id="stock_output" style='width:500px;height:500px;'></textarea>
   </body>
   <script src='static/graph.js'></script>
 
