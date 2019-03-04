@@ -1,4 +1,4 @@
-from flask import Flask, flash, redirect, render_template, request, session, abort
+from flask import Flask, render_template, request
 
 app = Flask(__name__, template_folder='templates')
 
@@ -7,13 +7,10 @@ app = Flask(__name__, template_folder='templates')
 def home ():
     return render_template('/home.html')
 
-from flask import request
+
 @app.route('/scraper', methods=['GET', 'POST'])
 def get_stock():
     from alpha_vantage.timeseries import TimeSeries
-    from bs4 import BeautifulSoup
-    from html.parser import HTMLParser
-
 
     stock = request.args.get('stock')
     ts = TimeSeries(key='IK798ICZ6BMU2EZM', output_format='pandas')
