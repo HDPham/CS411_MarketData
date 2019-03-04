@@ -5,7 +5,9 @@ function search() {
     // send data to scraping.py
     url: '/scraper',
     type: 'GET',
-    data: stock,
+    data: {
+      stock: stock
+    },
     dataType: "json",
     success: function(response){
       document.getElementById("stock_output").value = Object.values(response);
