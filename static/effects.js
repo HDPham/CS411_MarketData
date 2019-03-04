@@ -13,7 +13,7 @@ function search() {
       document.getElementById("stock_output").value = Object.values(response);
     },
     error: function(response){
-      document.getElementById("stock_output").value = "Sorry, something went wrong in your search :/";
+      document.getElementById("stock_output").value = "Sorry, something went wrong in your search :/ Please make sure your stock symbol is valid";
     }
   });
 }
