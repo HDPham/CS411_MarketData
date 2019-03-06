@@ -3,7 +3,7 @@ function search() {
   console.log(stock)
   $.ajax({
     // send data to scraping.py
-    url: '/scraper',
+    url: '/get_stock',
     type: 'GET',
     data: {
       stock: stock
