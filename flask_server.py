@@ -7,7 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from pandas.io import sql
 #Note: On the actual webserver, will need to CREATE USER with full privileges
 # After creating the user, then create database
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://thomas:Password_123@localhost/stock_data" #'mysql://root:RFV3927qp@localhost/db' #change to mySQL later
+app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://thomas:Password_123@localhost/stock_data" #change to mySQL later
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
