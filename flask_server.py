@@ -50,22 +50,24 @@ def get_stock():
     session = Session()
     connection = engine.connect()    #set up connection to engine so you can add stocks
     #Try to get data
-    try:
-        values = engine.execute("SELECT * FROM time WHERE stock_name=\""+stock+"\";")
-        if(values.first() is None):
-            pass
+    values = engine.execute("SELECT * FROM time WHERE stock_name=\""+stock+"\";")
+    print(values.returns_rows)
+    if(values.returns_rows == True):
+        print("reached")
         connection.close()
         session.close()
         stock_dict = {}
         for row in values:
             stock_dict[row["datetime"]] = (float(row['open_']), float(row['high']), float(row['low']), float(row['close']), float(row['volume']))
         return json.dumps(stock_dict)
-    except:
-        pass
+
     # If it fails, add the data to the db
-    ts = TimeSeries(key='IK798ICZ6BMU2EZM')
-    data, meta_data = ts.get_intraday(symbol=stock,interval='1min', outputsize='full')
-    print(data)
+    try:
+        ts = TimeSeries(key='IK798ICZ6BMU2EZM')
+        data, meta_data = ts.get_intraday(symbol=stock,interval='1min', outputsize='full')
+        print(data)
+    except:
+        raise Exception("Failed to retrieve data from alpha_vantage")
     #Create a new table and
     new_table = Stock(name=stock)
     for key in data.keys():
