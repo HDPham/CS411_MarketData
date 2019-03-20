@@ -17,21 +17,19 @@ function search() {
       //Keys and values are backwards, so reverse
       keys = keys.reverse();
       values = values.reverse();
-      console.log(keys);
-      console.log(values);
       // We only care about close, so cutting it down to just that
       for(var i=0; i < keys.length; i++){
         times.push(keys[i]);
         prices.push(values[i][3]);
       }
-      console.log(times);
-      console.log(prices);
       // package into a niiiiice data format
-      var data = {
+      var data = [
+      {
         x: times,
         y: prices,
         type: 'scatter'
-      };
+      }
+    ];
       Plotly.newPlot('stockGraph', data, {}, {showSendToCloud: true});
     },
     error: function(response){

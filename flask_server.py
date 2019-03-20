@@ -20,10 +20,10 @@ class Stock(db.Model):
 class Time(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     datetime = db.Column(db.String(30))
-    open_ = db.Column(db.Numeric)
-    high = db.Column(db.Numeric)
-    low = db.Column(db.Numeric)
-    close = db.Column(db.Numeric)
+    open_ = db.Column(db.Float)
+    high = db.Column(db.Float)
+    low = db.Column(db.Float)
+    close = db.Column(db.Float)
     volume = db.Column(db.Integer)
     stock_name = db.Column(db.String(5), db.ForeignKey('stock.name'), nullable=False)
     stocks = db.relationship('Stock', backref=db.backref('times', lazy=True))
@@ -64,11 +64,12 @@ def get_stock():
     try:
         ts = TimeSeries(key='IK798ICZ6BMU2EZM')
         data, meta_data = ts.get_intraday(symbol=stock,interval='1min', outputsize='full')
+        print(data)
     except:
         raise Exception("Failed to retrieve data from alpha_vantage")
-    #Create a new table and
+    #Create a new table
     new_table = Stock(name=stock)
-
+    # The only thing we might have to adjust is inserting into the database
     for key in data.keys():
         time = Time(datetime=key, open_=data[key]['1. open'], high=data[key]['2. high'], low=data[key]['3. low'], close=data[key]['4. close'], volume=data[key]['5. volume'])
         new_table.times.append(time)
@@ -87,8 +88,8 @@ def get_stock():
     return json.dumps(stock_dict)
 
 # This will be the automated webscrapper that updates stock info daily (during low use hours (2 AM?))
-# @app.route('/update', methods=['GET'])
-# def update_stock_table():
-#     return
+@app.route('/update', methods=['GET'])
+def update_stock_table():
+    return
 if __name__ == '__main__':
     app.run()
