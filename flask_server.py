@@ -50,9 +50,9 @@ def get_stock():
     session = Session()
     connection = engine.connect()    #set up connection to engine so you can add stocks
     #Try to get data
-    values = engine.execute("SELECT * FROM time WHERE stock_name=\""+stock+"\";")
-    print(values.returns_rows)
-    if(values.returns_rows == True):
+    values = engine.execute("SELECT * FROM time WHERE stock_name=\""+stock+"\";").first()
+    if(values is not None):
+        values = engine.execute("SELECT * FROM time WHERE stock_name=\""+stock+"\";")
         print("reached")
         connection.close()
         session.close()
@@ -65,7 +65,6 @@ def get_stock():
     try:
         ts = TimeSeries(key='IK798ICZ6BMU2EZM')
         data, meta_data = ts.get_intraday(symbol=stock,interval='1min', outputsize='full')
-        print(data)
     except:
         raise Exception("Failed to retrieve data from alpha_vantage")
     #Create a new table and
