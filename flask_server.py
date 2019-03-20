@@ -64,7 +64,6 @@ def get_stock():
     try:
         ts = TimeSeries(key='IK798ICZ6BMU2EZM')
         data, meta_data = ts.get_intraday(symbol=stock,interval='1min', outputsize='full')
-        print(data)
     except:
         raise Exception("Failed to retrieve data from alpha_vantage")
     #Create a new table
