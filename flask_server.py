@@ -52,8 +52,7 @@ def get_stock():
     #Try to get data
     values = engine.execute("SELECT * FROM time WHERE stock_name=\""+stock+"\";").first()
     if(values is not None):
-        values = engine.execute("SELECT * FROM time WHERE stock_name=\""+stock+"\";")
-        print("reached")
+        values = engine.execute("SELECT * FROM time WHERE stock_name=\""+stock+"\";").fetchall()
         connection.close()
         session.close()
         stock_dict = {}
@@ -69,6 +68,7 @@ def get_stock():
         raise Exception("Failed to retrieve data from alpha_vantage")
     #Create a new table and
     new_table = Stock(name=stock)
+
     for key in data.keys():
         time = Time(datetime=key, open_=data[key]['1. open'], high=data[key]['2. high'], low=data[key]['3. low'], close=data[key]['4. close'], volume=data[key]['5. volume'])
         new_table.times.append(time)
