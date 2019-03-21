@@ -47,16 +47,17 @@ class Time(db.Model):
         return '<Time %r>' % self.datetime
 # class User(db.Model):
 #     id =
-
-@app.route('/')
 @app.route('/login')
 def login():
     return render_template('/login.html')
 
-@app.route('/home')
-def home ():
+@app.route('/', defaults={'user':'Guest'})
+@app.route('/home', defaults={'user':'Guest'})
+@app.route('/home/<user>')
+def home (user):
+    user = user.capitalize()
     db.create_all() #don't know if this works but let's try?
-    return render_template('/home.html')
+    return render_template('/home.html', **locals())
 
 @app.route('/create_user')
 def create_user():
@@ -78,14 +79,14 @@ def check_user():
     password = request.args.get('password')
     engine = db.engine
     user_exist = engine.execute("SELECT * FROM user WHERE user= \""+user+"\" AND password = \""+password+"\";").first()
-    if(user_exist is not None):
-        #Redirect the user to /home
-        pass
-    stupid_dict = {}
-    stupid_dict['exists'] = False
-    stupid_dict[user] = user
-    stupid_dict[password] = password
-    return json.dumps(stupid_dict)
+    if(user_exist is None):
+        invalid_user = {}
+        invalid_user['exists'] = False
+        return json.dumps(invalid_user)
+    valid_user = {}
+    valid_user['exists'] = True
+    valid_user['user'] = user
+    return json.dumps(valid_user)
 
 
 #continous web scraping -- update at closing

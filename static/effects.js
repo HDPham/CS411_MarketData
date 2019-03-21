@@ -55,6 +55,7 @@ function user_search(){
       if(entries[0][1] == false){
         document.getElementById('error_msg').value = 'Sorry, your username or password was invalid';
       }
+      window.location.href = '/home/'+entries[1][1];
     },
     error: function(response){
       console.log('error');
@@ -74,26 +75,19 @@ function call_insert_user(){
     },
     success: function(response){
       console.log('success');
-      window.location.href = '/home';
+      window.location.href = '/home/'+user;
     },
     error: function(response){
       console.log('error');
     }
   });
 }
-// function set_user_for_home(){
-//   var user_array = document.getElementsByClassName('user').value;
-//   $.ajax({
-//     url:'/home',
-//     type: 'POST',
-//     data:{
-//       user:user_array[0]
-//     },
-//     success: function(response){
-//       console.log('success');
-//     }
-//     error: function(response){
-//       console.log('error')
-//     }
-//   })
-// }
+function set_user_for_home(){
+  var user = document.getElementById('user_name').value;
+  console.log(user);
+  if(user == ''){
+    user = 'Guest';
+  }
+  console.log(user);
+  window.location.href = '/home/'+user;
+}
