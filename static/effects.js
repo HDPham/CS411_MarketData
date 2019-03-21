@@ -29,7 +29,7 @@ function search() {
         y: prices,
         type: 'scatter'
       }
-    ];
+      ];
       Plotly.newPlot('stockGraph', data, {}, {showSendToCloud: true});
     },
     error: function(response){
@@ -37,3 +37,63 @@ function search() {
     }
   });
 }
+
+function user_search(){
+  var user = document.getElementById('user_name').value;
+  var password = document.getElementById('password').value;
+  $.ajax({
+    url:'/check_user',
+    type: 'GET',
+    data: {
+      user: user,
+      password: password
+    },
+    dataType: 'json',
+    success: function(response){
+      entries = Object.entries(response);
+      console.log(entries[0][1]);
+      if(entries[0][1] == false){
+        document.getElementById('error_msg').value = 'Sorry, your username or password was invalid';
+      }
+    },
+    error: function(response){
+      console.log('error');
+      document.getElementById('error_msg').value = 'Sorry, something went wrong in processing your request'
+    }
+  });
+}
+function call_insert_user(){
+  var user = document.getElementById('new_user').value;
+  var password = document.getElementById('new_password').value;
+  $.ajax({
+    url:'/insert_user',
+    type: 'POST',
+    data:{
+      user:user,
+      password:password
+    },
+    success: function(response){
+      console.log('success');
+      window.location.href = '/home';
+    },
+    error: function(response){
+      console.log('error');
+    }
+  });
+}
+// function set_user_for_home(){
+//   var user_array = document.getElementsByClassName('user').value;
+//   $.ajax({
+//     url:'/home',
+//     type: 'POST',
+//     data:{
+//       user:user_array[0]
+//     },
+//     success: function(response){
+//       console.log('success');
+//     }
+//     error: function(response){
+//       console.log('error')
+//     }
+//   })
+// }

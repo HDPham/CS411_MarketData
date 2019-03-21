@@ -1,10 +1,13 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, Response
 import json
 app = Flask(__name__, template_folder='templates')
 
 # get mySQL into flask app
 from flask_sqlalchemy import SQLAlchemy
-from pandas.io import sql
+#Get stock data API
+from alpha_vantage.timeseries import TimeSeries     #If something goes wrong with stock data stuff, it's here
+
+
 #Note: On the actual webserver, will need to CREATE USER with full privileges
 # After creating the user, then create database
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://thomas:Password_123@localhost/stock_data" #change to mySQL later
@@ -12,6 +15,19 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 metadata = db.metadata
+
+users_tracking_stocks = db.Table('users_tracking_stocks',
+    db.Column('user', db.String(100), db.ForeignKey('user.user'), primary_key=True),
+    db.Column('stock', db.String(5), db.ForeignKey('stock.name'), primary_key=True)
+    )
+
+class User(db.Model):
+    user = db.Column(db.String(100), primary_key=True)
+    password = db.Column(db.String(100))
+    tracked_stocks = db.relationship('Stock', secondary=users_tracking_stocks, lazy='subquery',
+                    backref=db.backref('users', lazy=True))
+    def __repr__(self):
+        return '<User %r' %self.user
 
 class Stock(db.Model):
     name = db.Column(db.String(5), primary_key=True)
@@ -26,20 +42,53 @@ class Time(db.Model):
     close = db.Column(db.Float)
     volume = db.Column(db.Integer)
     stock_name = db.Column(db.String(5), db.ForeignKey('stock.name'), nullable=False)
-    stocks = db.relationship('Stock', backref=db.backref('times', lazy=True))
+    values_of = db.relationship('Stock', backref=db.backref('times', lazy=True))
     def __repr__(self):
         return '<Time %r>' % self.datetime
 # class User(db.Model):
 #     id =
 
 @app.route('/')
+@app.route('/login')
+def login():
+    return render_template('/login.html')
+
 @app.route('/home')
 def home ():
     db.create_all() #don't know if this works but let's try?
     return render_template('/home.html')
 
+@app.route('/create_user')
+def create_user():
+    return render_template('/create_user.html')
+
+@app.route('/insert_user', methods=['POST'])
+def insert_user_to_table():
+    user = request.form.get('user')
+    password = request.form.get('password')
+    connection = db.engine.connect()
+    result = connection.execute("INSERT INTO user(user, password) " + "VALUES ( \"" + user +"\", \""+password+"\");" )
+    connection.close()
+    return Response(None)
+
+
+@app.route('/check_user', methods=['GET'])
+def check_user():
+    user = request.args.get('user')
+    password = request.args.get('password')
+    engine = db.engine
+    user_exist = engine.execute("SELECT * FROM user WHERE user= \""+user+"\" AND password = \""+password+"\";").first()
+    if(user_exist is not None):
+        #Redirect the user to /home
+        pass
+    stupid_dict = {}
+    stupid_dict['exists'] = False
+    stupid_dict[user] = user
+    stupid_dict[password] = password
+    return json.dumps(stupid_dict)
+
+
 #continous web scraping -- update at closing
-from alpha_vantage.timeseries import TimeSeries
 @app.route('/get_stock', methods=['GET', 'POST'])
 def get_stock():
     #Get stock name and get SQLAlchemy database
