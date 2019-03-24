@@ -10,7 +10,7 @@ from alpha_vantage.timeseries import TimeSeries     #If something goes wrong wit
 
 #Note: On the actual webserver, will need to CREATE USER with full privileges
 # After creating the user, then create database
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://thomas:Password_123@localhost/stock_data" #change to mySQL later
+app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://cs411proj:Password_123@localhost/stock_data" #change to mySQL later
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -136,6 +136,17 @@ def get_stock():
         stock_dict[row["datetime"]] = (float(row['open_']), float(row['high']), float(row['low']), float(row['close']), float(row['volume']))
     return json.dumps(stock_dict)
 
+@app.route('/add_stock', methods=['POST'])
+def add_stock():
+    user = request.form.get('user')
+    stock = request.form.get('stock')
+    print(user)
+    print(stock)
+    connection = db.engine.connect()
+    raw_SQL = "INSERT INTO users_tracking_stocks(user, stock) VALUES (\""+user+"\", \""+stock+"\");"
+    result = connection.execute(raw_SQL)
+    connection.close()
+    return Response(None)
 # This will be the automated webscrapper that updates stock info daily (during low use hours (2 AM?))
 @app.route('/update', methods=['GET'])
 def update_stock_table():

@@ -1,6 +1,5 @@
 function search() {
   var stock = document.getElementById("searchbox").value;
-  console.log(stock)
   $.ajax({
     // send data to scraping.py
     url: '/get_stock',
@@ -31,9 +30,11 @@ function search() {
       }
       ];
       Plotly.newPlot('stockGraph', data, {}, {showSendToCloud: true});
+      document.getElementById('current_stock').value = stock;
     },
     error: function(response){
       document.getElementById("stock_output").value = "Sorry, something went wrong in your search :/ Please make sure your stock symbol is valid";
+      document.getElementById('current_stock').value = null;
     }
   });
 }
@@ -84,10 +85,30 @@ function call_insert_user(){
 }
 function set_user_for_home(){
   var user = document.getElementById('user_name').value;
-  console.log(user);
   if(user == ''){
     user = 'Guest';
   }
-  console.log(user);
   window.location.href = '/home/'+user;
+}
+function call_add_stock(){
+  var current_user = document.getElementById('current_user').value;
+  console.log(current_user);
+  var current_stock = document.getElementById('current_stock').value;
+  if(current_stock==null){
+    document.getElementById('stock_output').value = 'Sorry, you haven\'t selected any stock';
+  }
+  $.ajax({
+    url:'/add_stock',
+    type: 'POST',
+    data: {
+      user: current_user,
+      stock: current_stock
+    },
+    success: function(response){
+      console.log('success');
+    },
+    error: function(response){
+      console.log('error');
+    }
+  });
 }
