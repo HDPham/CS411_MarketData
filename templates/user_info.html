@@ -6,6 +6,7 @@
     <link rel="shortcut icon" href="/static/squirrelbrown.png" />
     <!-- Javascript styling -->
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src='/static/user_func.js'></script>
     <!--- CSS styling (for later)-->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
     <link rel="stylesheet" type="text/css" href="/static/style.css" />
@@ -13,14 +14,12 @@
   <body>
     <div class="container" margin=auto>
         <br />
-        <h1>Log In</h1><br />
-        <input id='user_name' type='text' placeholder="Name"/><br />
-        <input id='password' type='text' placeholder="Password" /><br />
-        <button id='user_btn' onclick='user_search()'>Enter</button><br />
-        <button id='guest_btn' onclick='set_user_for_home()'>Guest -></button><br />  <!-- don't know why this isn't working, will come back to it later -->
-        <a id='create_user' href='/create_user'>Create New User</a>
-        <textarea id='error_msg'></textarea>
+        <h1>User</h1><br />
+        <textarea id='user_info_output' rows='20' cols='50'></textarea><br />
+        <input id='new_password' type='text' placeholder="Password" /><br />
+        <input id='confirm_password' type='text' placeholder='Confirm Password' /><br />
+        <button id='user_btn' onclick='call_update_user_info()'>Enter</button><br />
+        <a href='/home'>Return to home</a>
     </div>
   </body>
-  <script src='/static/effects.js'></script>
 </html>

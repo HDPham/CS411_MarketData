@@ -40,6 +40,9 @@
           <li class="nav-item">
             <a class="nav-link" href="/login">Log In</a>
           </li>
+          <li class='nav-item'>
+            <a class='nav-link' href='/user_info'>User</a>
+          </li>
         </ul>
       </div>
     </nav>
@@ -53,11 +56,12 @@
           <input id="searchbox" type="text" placeholder="Type stock" />
           <button id="searchbutton" type="button" onclick="search()">Enter</button>
           <button id='addstockbtn' type='button' onclick='call_add_stock()'>Add Stock</button>
+          <button id='deletestockbtn' type='button' onclick='call_remove_stock()'>Remove Stock</button>
       </div> <br />
       <textarea id="stock_output" style="width:100%;height:500px;"></textarea>
       <div id="stockGraph"></div>
     </div>
-    <h1 id='current_user' style='display: none'>{{user|safe}}</div>
+    <div id='user_hold' >{{user|safe}}</div>
     <div id='current_stock' style='display: none'></div>
   </body>
   <script src="/static/graph.js"></script>
