@@ -1,6 +1,18 @@
 $(document).ready(function (){
   console.log('ready');
   call_get_user_info();
+  $.ajax({
+    url:'/get_user_stocks',
+    type: 'GET',
+    success: function(response){
+      console.log(response)
+      document.getElementById('user_tracked_stocks').value = response;
+    },
+    error: function(response){
+      console.log('error');
+      document.getElementById('user_info_output').value = "Bwahaha Thomas, you have thwarted yourself once again";
+    }
+  });
 })
 
 function call_get_user_info(){

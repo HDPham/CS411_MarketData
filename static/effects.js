@@ -76,7 +76,7 @@ function call_insert_user(){
     },
     success: function(response){
       console.log('success');
-      window.location.href = '/home/'+user;
+      window.location.href = '/home';
     },
     error: function(response){
       console.log('error');

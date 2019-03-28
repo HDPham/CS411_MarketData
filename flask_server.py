@@ -185,6 +185,17 @@ def get_user_info():
         user_dict[row['password']] = row['password']
     return json.dumps(user_dict)
 
+@app.route('/get_user_stocks', methods=['GET'])
+def get_user_stocks():
+    user = session.get('user')
+    connection = db.engine.connect()
+    query = 'SELECT * FROM users_tracking_stocks WHERE user = \''+user+'\';'
+    result = connection.execute(query)
+    user_dict = {}
+    for row in result:
+        user_dict[row['stock']] = row['stock']
+        user_dict[row['stock']] = row['stock']
+    return json.dumps(user_dict)
 @app.route('/update_user_info', methods=['POST'])
 def update_user_info():
     user = session.get('user')
