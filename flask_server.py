@@ -231,6 +231,20 @@ def find_volatility():
         avg_price[row['stock']] = row['average']
     return json.dumps(avg_price)
 # This will be the automated webscrapper that updates stock info daily (during low use hours (2 AM?))
+@app.route('/most_popular', methods=['GET'])
+def most_popular():
+    connection = db.engine.connect()
+    #HUNG - Just fill out the sql query here and put variables in {}. Use the format
+    # function to fill them in. I don't think you'll need it (most popular doesn't have any input from user)
+    # but it's there if you need it
+    advanced_SQL = """ """.format()
+    result = connection.execute(advanced_SQL)
+    most_popular = {}
+    for row in result:
+        # Hung, whatever you name the columns of your select statement, put them in the brackets below
+        most_popular[row['COLUMN 1']] = row['COLUMN 2']
+    return json.dumps(most_popular)
+
 @app.route('/update', methods=['GET'])
 def update_stock_table():
     return

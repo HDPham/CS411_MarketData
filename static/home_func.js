@@ -20,3 +20,16 @@ function call_find_volatility(){
     }
   });
 }
+
+function call_most_popular(){
+  $.ajax({
+    url:'/most_popular',
+    type: 'GET',
+    success: function(response){
+      document.getElementById('stock_output').value = response;
+    },
+    error: function(response){
+      document.getElementById('compare_stock_result').value = 'Sorry Hung, there was an error in your SQL :/ ';
+    }
+  });
+}
