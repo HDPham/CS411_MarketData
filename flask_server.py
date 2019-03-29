@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, Response, session
-import json
+import json, datetime
 app = Flask(__name__, template_folder='templates')
 app.secret_key = '99qVu2YPjy5ss0Z66Igj'
 
@@ -29,7 +29,6 @@ class User(db.Model):
                     backref=db.backref('users', lazy=True))
     def __repr__(self):
         return '<User %r' %self.user
-
 class Stock(db.Model):
     name = db.Column(db.String(5), primary_key=True)
     def __repr__(self):
@@ -46,6 +45,9 @@ class Time(db.Model):
     values_of = db.relationship('Stock', backref=db.backref('times', lazy=True))
     def __repr__(self):
         return '<Time %r>' % self.datetime
+
+db.create_all() #don't know if this works but let's try?
+db.session.commit()
 # class User(db.Model):
 #     id =
 @app.route('/')
@@ -57,7 +59,6 @@ def login():
 def home ():
     user = session['user']
     user = user.capitalize()
-    db.create_all() #don't know if this works but let's try?
     return render_template('/home.html', **locals())
 
 @app.route('/create_user')
@@ -196,6 +197,7 @@ def get_user_stocks():
         user_dict[row['stock']] = row['stock']
         user_dict[row['stock']] = row['stock']
     return json.dumps(user_dict)
+
 @app.route('/update_user_info', methods=['POST'])
 def update_user_info():
     user = session.get('user')
@@ -204,6 +206,30 @@ def update_user_info():
     query = 'UPDATE user SET password = \''+password+'\' WHERE user = \''+user+'\';'
     result = connection.execute(query)
     return Response(None)
+
+@app.route('/find_volatility', methods=['GET', 'POST'])
+def find_volatility():
+    month = int(request.args.get('month'))
+    day = int(request.args.get('day'))
+    year = int(request.args.get('year'))
+    user = session.get('user')
+
+    date = datetime.date(year, month, day).strftime("%Y-%m-%d")
+    print(date)
+    connection = db.engine.connect()
+    advanced_SQL = """
+    SELECT stock AS stock, AVG(close) AS average
+    FROM time
+    JOIN users_tracking_stocks ON time.stock_name = users_tracking_stocks.stock
+    WHERE datetime LIKE '{date}%%' AND user = '{user}'
+    GROUP BY time.stock_name;""".format(date=date, user=user)
+
+    result = connection.execute(advanced_SQL)
+    avg_price = {}
+    for row in result:
+        print(row)
+        avg_price[row['stock']] = row['average']
+    return json.dumps(avg_price)
 # This will be the automated webscrapper that updates stock info daily (during low use hours (2 AM?))
 @app.route('/update', methods=['GET'])
 def update_stock_table():

@@ -15,6 +15,7 @@
     <!-- Javascript styling -->
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <script src="/static/effects.js"></script>
+    <script src='/static/home_func.js'></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <!--- CSS styling (for later)-->
@@ -62,18 +63,18 @@
       <div class="d-flex justify-content-center">
         <h3 id='compare_stocks_header'>Compare Stocks</h3>
         <select id='month'>
-            <option value='jan'>January</option>
-            <option value='feb'>February</option>
-            <option value='march'>March</option>
-            <option value='april'>April</option>
-            <option value='may'>May</option>
-            <option value='june'>June</option>
-            <option value='july'>July</option>
-            <option value='aug'>August</option>
-            <option value='sept'>September</option>
-            <option value='oct'>October</option>
-            <option value='nov'>November</option>
-            <option value='dec'>December</option>
+            <option value='1'>January</option>
+            <option value='2'>February</option>
+            <option value='3'>March</option>
+            <option value='4'>April</option>
+            <option value='5'>May</option>
+            <option value='6'>June</option>
+            <option value='7'>July</option>
+            <option value='8'>August</option>
+            <option value='9'>September</option>
+            <option value='10'>October</option>
+            <option value='11'>November</option>
+            <option value='12'>December</option>
         </select>
         <select id='day'>
           <option value="1">1</option>
@@ -108,7 +109,7 @@
           <option value='30'>30</option>
           <option value="31">31</option>
         </select>
-        <select>
+        <select id='year'>
           <option value='2019'>2019</option>
           <option value='2018'>2018</option>
           <option value='2017'>2017</option>
@@ -131,10 +132,11 @@
           <option value='2000'>2000</option>
           <option value='1999'>1999</option>
         </select>
-        <input id='comparestock1' type='text' placeholder="Stock 1" />
-        <input id='comparestock2' type='text' placeholder='Stock 2' />
-        <button id='deletestockbtn' type='button' onclick='call_remove_stock()'>Compare Stocks</button>
+        <!-- <input id='comparestock1' type='text' placeholder="Stock 1" />
+        <input id='comparestock2' type='text' placeholder='Stock 2' /> -->
+        <button id='comparestockbtn' type='button' onclick='call_find_volatility()'>Compare Stocks</button>
       </div>
+      <textarea id='compare_stock_result' type='button' rows='1' style='width:100%;'></textarea>
       <div id="stockGraph"></div>
     </div>
     <!-- <div id='user_hold' >{{user|safe}}</div> -->
