@@ -181,9 +181,9 @@ def get_user_info():
     query = 'SELECT * FROM user WHERE user = \''+user+'\';'
     result = connection.execute(query)
     user_dict = {}
-    for row in result:
-        user_dict[row['user']] = row['user']
-        user_dict[row['password']] = row['password']
+    for row in result:      #guaranteed to only be one since users are unique
+        user_dict['user'] = row['user']
+        user_dict['password'] = row['password']
     return json.dumps(user_dict)
 
 @app.route('/get_user_stocks', methods=['GET'])

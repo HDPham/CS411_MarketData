@@ -5,12 +5,11 @@ $(document).ready(function (){
     url:'/get_user_stocks',
     type: 'GET',
     success: function(response){
-      console.log(response)
       document.getElementById('user_tracked_stocks').value = response;
+      make_user_stock_table(response);
     },
     error: function(response){
-      console.log('error');
-      document.getElementById('user_info_output').value = "Bwahaha Thomas, you have thwarted yourself once again";
+      console.log("Bwahaha Thomas, you have thwarted yourself once again");
     }
   });
 })
@@ -20,13 +19,19 @@ function call_get_user_info(){
     url:'/get_user_info',
     type:'GET',
     success: function(response){
-      console.log(response)
-      document.getElementById('user_info_output').value = response;
+      var result = JSON.parse(response);
+      console.log(result.user);
+      document.getElementById('user_table_name').innerHTML = result.user;
+      document.getElementById('user_table_password').innerHTML = result.password;
     },
     error: function(response){
-      document.getElementById('user_info_output').value = "Bwahaha Thomas, you have thwarted yourself once again";
+      console.log("Bwahaha Thomas, you have thwarted yourself once again");
     }
   });
+}
+
+function make_user_stock_table(response){
+  var result = JSON.parse(response)
 }
 function call_update_user_info(){
   password = document.getElementById('new_password').value;
