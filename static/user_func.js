@@ -5,7 +5,6 @@ $(document).ready(function (){
     url:'/get_user_stocks',
     type: 'GET',
     success: function(response){
-      console.log(response)
       document.getElementById('user_tracked_stocks').value = response;
     },
     error: function(response){
@@ -20,8 +19,11 @@ function call_get_user_info(){
     url:'/get_user_info',
     type:'GET',
     success: function(response){
-      console.log(response)
+      var result = JSON.parse(response);
       document.getElementById('user_info_output').value = response;
+      console.log(result.user);
+      document.getElementById('user_info_table').rows[0].cells[1].value = result.user;
+      document.getElementById('user_info_table').rows[1].cells[1].value = result.password;
     },
     error: function(response){
       document.getElementById('user_info_output').value = "Bwahaha Thomas, you have thwarted yourself once again";
