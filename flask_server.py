@@ -214,7 +214,7 @@ def find_volatility():
     year = int(request.args.get('year'))
     user = session.get('user')
 
-    date = datetime.date(year, month, day).strftime("%Y-%m-%d")
+    date = datetime.date(year, month, day).strftime("%Y-%m-%d") 
     print(date)
     connection = db.engine.connect()
     advanced_SQL = """
@@ -233,16 +233,29 @@ def find_volatility():
 # This will be the automated webscrapper that updates stock info daily (during low use hours (2 AM?))
 @app.route('/most_popular', methods=['GET'])
 def most_popular():
+    month = int(request.args.get('month'))
+    day = int(request.args.get('day'))
+    year = int(request.args.get('year'))
+    user = session.get('user')
+
+    date = datetime.date(year, month, day)
+    date_str = date.strftime("%Y-%m-%d")
     connection = db.engine.connect()
-    #HUNG - Just fill out the sql query here and put variables in {}. Use the format
-    # function to fill them in. I don't think you'll need it (most popular doesn't have any input from user)
-    # but it's there if you need it
-    advanced_SQL = """ """.format()
-    result = connection.execute(advanced_SQL)
+    
+    advanced_SQL = """
+    SELECT stock, count, close FROM 
+    (SELECT stock, count(*) AS count FROM users_tracking_stocks
+    GROUP BY stock) AS s1
+    JOIN
+    (SELECT stock_name, close FROM time
+    WHERE datetime = %s) AS s2
+    ON s1.stock = s2.stock_name;
+    """
+    result = connection.execute(advanced_SQL, '{date} 16:00:00'.format(date=date_str))
     most_popular = {}
     for row in result:
-        # Hung, whatever you name the columns of your select statement, put them in the brackets below
-        most_popular[row['COLUMN 1']] = row['COLUMN 2']
+        
+        most_popular[row['stock']] = (row['count'], row['close'])
     return json.dumps(most_popular)
 
 @app.route('/update', methods=['GET'])

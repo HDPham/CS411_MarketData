@@ -22,9 +22,18 @@ function call_find_volatility(){
 }
 
 function call_most_popular(){
+  var month = document.getElementById('month').value;
+  var day = document.getElementById('day').value;
+  var year = document.getElementById('year').value;
+
   $.ajax({
     url:'/most_popular',
     type: 'GET',
+    data:{
+      month: month,
+      day: day,
+      year: year
+    },
     success: function(response){
       document.getElementById('stock_output').value = response;
     },
