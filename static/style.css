@@ -1,4 +1,8 @@
-body{
-  margin: 0;
+body {
   font-family: Arial, 'Vollkorn', Georgia, Times, serif;
 }
+
+td {
+  width:50%
+}
+

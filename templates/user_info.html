@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <!-- Tab Icon info  -->
-    <title>Stock Squirrel - Home</title>
+    <title>Stock Squirrel - User</title>
     <link rel="shortcut icon" href="/static/squirrelbrown.png" />
     <!-- Javascript styling -->
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
@@ -15,7 +15,17 @@
     <div class="container" margin=auto>
         <br />
         <h1>User</h1><br />
-        <textarea id='user_info_output' rows='20' cols='50'></textarea><br />
+        <table id='user_info_table' style='width:100%' border='1'>
+          <tr>
+            <td>Name</td>
+            <td id='user_table_name'></td>
+          </tr>
+          <tr>
+            <td>Password</td>
+            <td id='user_table_password'></td>
+          </tr>
+        </table><br /><br />
+        <div id='div_of_user_stocks'></div>
         <textarea id='user_tracked_stocks' row='20' cols='50'></textarea><br />
         <input id='new_password' type='text' placeholder="Password" /><br />
         <input id='confirm_password' type='text' placeholder='Confirm Password' /><br />
