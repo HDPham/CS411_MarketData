@@ -1,8 +1,4 @@
 body{
   margin: 0;
-  font-family: 'Vollkorn', Georgia, Times, serif;
-  font-size: 16px;
-}
-#searchbutton {
-    /* visibility: hidden; */
+  font-family: Arial, 'Vollkorn', Georgia, Times, serif;
 }
