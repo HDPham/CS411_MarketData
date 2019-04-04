@@ -1,8 +1,17 @@
+html, body {
+  height: 100%;
+}
+
 body {
-  font-family: Arial, 'Vollkorn', Georgia, Times, serif;
+  font-family: Helvetica, 'Vollkorn', Georgia, Times, serif;
 }
 
 td {
   width:50%
 }
 
+.vert-align {
+  display: flex;
+  flex-direction:column;
+  justify-content: center;
+}

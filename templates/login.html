@@ -11,16 +11,38 @@
     <link rel="stylesheet" type="text/css" href="/static/style.css" />
   </head>
   <body>
-    <div class="container" margin=auto>
-        <br />
-        <h1>Log In</h1><br />
-        <input id='user_name' type='text' placeholder="Name"/><br />
-        <input id='password' type='text' placeholder="Password" /><br />
-        <button id='user_btn' onclick='user_search()'>Enter</button><br />
-        <button id='guest_btn' onclick='set_user_for_home()'>Guest -></button><br />  <!-- don't know why this isn't working, will come back to it later -->
-        <a id='create_user' href='/create_user'>Create New User</a>
-        <textarea id='error_msg'></textarea>
+    
+    
+    <div class="container h-100 vert-align" style="max-width: 400px;">
+      <div class="card bg-light">
+        <div class="card-body mx-auto">
+          <h4 class="card-title mt-3 text-center" style="font-family: cursive">
+            <img src="/static/squirrelblue.png" width="30" height="30" class="d-inline-block align-top" alt="" />
+            Stock Squirrel
+          </h4>
+          <form>
+            <div class="form-group input-group">
+              <input id='user_name' class="form-control" type='text' placeholder="Username" />
+            </div>
+            <div class="form-group input-group">
+              <input id='password' class="form-control" type='password' placeholder="Password" />
+            </div>
+            <div class="form-group">
+              <button id='user_btn' class="btn btn-primary btn-block" type="button" onclick='user_search()'>Log In</button>
+            </div>
+            <div class="form-group text-center">
+              <button id='guest_btn' class="mx-auto" type="button" onclick='set_user_for_home()'>Enter as Guest</button>  <!-- don't know why this isn't working, will come back to it later -->
+            </div>
+            <p>Don't have an account? <a href="\create_user">Sign up</a></p>
+            <div class="form-group">
+              <textarea id='error_msg' class="form-control" placeholder="Displays Error Message"></textarea>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
+
+
   </body>
   <script src='/static/login_func.js'></script>
 </html>

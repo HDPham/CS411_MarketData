@@ -9,25 +9,17 @@
     <script src='/static/new_user_func.js'></script>
     <!--- CSS styling (for later)-->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}" />
+    <link rel="stylesheet" type="text/css" href="/static/style.css" />
   </head>
   <body>
-
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-      <div class="container collapse navbar-collapse" id="navbarToggler">
-        <a class="navbar-brand" href="{{ url_for('login') }}">
-          <img src="/static/squirrelblue.png" width="30" height="30" class="d-inline-block align-top" alt="" />
-          Stock Squirrel
-        </a>
-      </div>
-    </nav>
     
-    <br />
-
-    <div class="container">
+    <div class="container h-100 vert-align" style="max-width: 400px;">
       <div class="card bg-light">
-        <div class="card-body mx-auto" style="max-width: 400px;">
-          <h4 class="card-title text-center">Create Account</h4>
+        <div class="card-body mx-auto">
+            <h4 class="card-title mt-3 text-center" style="font-family: cursive">
+              <img src="/static/squirrelblue.png" width="30" height="30" class="d-inline-block align-top" alt="" />
+              Stock Squirrel
+            </h4>
           <form>
             <div class="form-group input-group">
               <input id="new_user" class="form-control" type="text" placeholder="Username" />
@@ -36,10 +28,13 @@
               <input id="new_password" class="form-control" type="password" placeholder="Password" />
             </div>
             <div class="form-group">
-              <button id="insert_user_btn" class="btn btn-primary btn-block" onclick="call_insert_user()">Sign Up</button>
+              <button id="insert_user_btn" class="btn btn-primary btn-block" type="button" onclick="call_insert_user()">Sign Up</button>
+            </div>
+            <p class="text-center">Have an account? <a href="{{ url_for('login') }}">Log In</a></p>
+            <div class="form-group">
+              <textarea id="error_msg" class="form-control" placeholder="Displays Error Message"></textarea>
             </div>
           </form>
-          <textarea id="error_msg" placeholder="Displays Error Message"></textarea>
         </div>
       </div>
     </div>
