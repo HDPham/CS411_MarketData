@@ -26,25 +26,30 @@
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggler" aria-controls="navbarToggler" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="container collapse navbar-collapse" id="navbarToggler">
-        <a class="navbar-brand" href="#">
+      <div class="container">
+        
+        <a class="navbar-brand" href="/home">
           <img src="/static/squirrelblue.png" width="30" height="30" class="d-inline-block align-top" alt="" />
           Stock Squirrel
         </a>
-        <ul class="navbar-nav ml-auto">
-          <li class="nav-item active">
-            <a class="nav-link" href="/home">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/login">Log In</a>
-          </li>
-          <li class='nav-item'>
-            <a class='nav-link' href='/user_info'>User</a>
-          </li>
-        </ul>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar_toggler" aria-controls="navbar_toggler" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div id="navbar_toggler" class="collapse navbar-collapse" >
+          
+          <ul class="navbar-nav ml-auto text-right">
+            <li class="nav-item active">
+              <a class="nav-link" href="/home">Home</a>
+            </li>
+            <li class='nav-item'>
+              <a class='nav-link' href='/user_info'>Profile</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/login">Log In</a>
+            </li>
+          </ul>
+        </div>
+
       </div>
     </nav>
 
@@ -52,16 +57,28 @@
 
     <!-- Main Body -->
     <div class="container">
+      <h1 id="user_logged_in" class="text-center">Hello {{user|safe}}!</h1>
+      
+      <br />
+
       <div class="d-flex justify-content-center">
-        <h3 id='user_logged_in'>Hello {{user|safe}}!</h3><br />
         <input id="searchbox" type="text" placeholder="Type stock" />
         <button id="searchbutton" type="button" onclick="search()">Enter</button>
         <button id='addstockbtn' type='button' onclick='call_add_stock()'>Add Stock</button>
         <button id='deletestockbtn' type='button' onclick='call_remove_stock()'>Remove Stock</button>
-      </div> <br />
-      <textarea id="stock_output" style="width:100%;height:500px;"></textarea>
+      </div>
+      
+      <br />
+
+      <div>
+        <textarea id="stock_output" style="width:100%; height:500px;"></textarea>
+      </div>
+
+      <br />
+
+      <h3 id="compare_stocks_header" class="text-center">Advanced</h3>
       <div class="d-flex justify-content-center">
-        <h3 id='compare_stocks_header'>Advanced</h3>
+        
         <select id='month'>
             <option value='1'>January</option>
             <option value='2'>February</option>
@@ -135,11 +152,17 @@
         <!-- <input id='comparestock1' type='text' placeholder="Stock 1" />
         <input id='comparestock2' type='text' placeholder='Stock 2' /> -->
         <button id='comparestockbtn' type='button' onclick='call_find_volatility()'>Compare Stocks</button>
-      </div>
-      <div class="d-flex justify-content-center">
         <button id='popularstockbtn' type='button' onclick="call_most_popular()">Find Most Popular</button>
       </div>
-      <textarea id='compare_stock_result' type='button' rows='1' style='width:100%;'></textarea>
+
+      <br />
+
+      <div class="text-center">
+        <textarea id="compare_stock_result" placeholder="Displays Error Message"></textarea>
+      </div>
+      
+      <br />
+
       <div id="stockGraph"></div>
     </div>
     <!-- <div id='user_hold' >{{user|safe}}</div> -->

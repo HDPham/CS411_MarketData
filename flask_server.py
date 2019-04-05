@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, Response, session
+from flask import Flask, jsonify, render_template, request, Response, session
 import json, datetime
 app = Flask(__name__, template_folder='templates')
 app.secret_key = '99qVu2YPjy5ss0Z66Igj'
@@ -20,7 +20,7 @@ metadata = db.metadata
 users_tracking_stocks = db.Table('users_tracking_stocks',
     db.Column('user', db.String(100), db.ForeignKey('user.user'), primary_key=True),
     db.Column('stock', db.String(5), db.ForeignKey('stock.name'), primary_key=True)
-    )
+)
 
 class User(db.Model):
     user = db.Column(db.String(100), primary_key=True)
@@ -190,13 +190,13 @@ def get_user_info():
 def get_user_stocks():
     user = session.get('user')
     connection = db.engine.connect()
-    query = 'SELECT * FROM users_tracking_stocks WHERE user = \''+user+'\';'
+    query = 'SELECT stock FROM users_tracking_stocks WHERE user = \''+user+'\';'
     result = connection.execute(query)
-    user_dict = {}
+    user_list = []
     for row in result:
-        user_dict[row['stock']] = row['stock']
-        user_dict[row['stock']] = row['stock']
-    return json.dumps(user_dict)
+        user_list.append(row[0])
+    print(user_list)
+    return jsonify(user_list)
 
 @app.route('/update_user_info', methods=['POST'])
 def update_user_info():
