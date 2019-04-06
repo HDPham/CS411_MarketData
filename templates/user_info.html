@@ -25,8 +25,11 @@
             <td id='user_table_password'></td>
           </tr>
         </table><br /><br />
-        <div id='div_of_user_stocks'></div>
-        <textarea id='user_tracked_stocks' row='20' cols='50'></textarea><br />
+        <table id='user_stock_table' style='width:100%' border='1'>
+          <tr>
+            <th><b>Stock Name</b></th>
+          </tr>
+        </table>
         <input id='new_password' type='text' placeholder="Password" /><br />
         <input id='confirm_password' type='text' placeholder='Confirm Password' /><br />
         <button id='user_btn' onclick='call_update_user_info()'>Enter</button><br />

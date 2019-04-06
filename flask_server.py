@@ -34,22 +34,34 @@ class Stock(db.Model):
     def __repr__(self):
         return '<Stock %r>' % self.name
 class Time(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    datetime = db.Column(db.String(30))
+    datetime = db.Column(db.String(30), primary_key=True)
     open_ = db.Column(db.Float)
     high = db.Column(db.Float)
     low = db.Column(db.Float)
     close = db.Column(db.Float)
     volume = db.Column(db.Integer)
-    stock_name = db.Column(db.String(5), db.ForeignKey('stock.name'), nullable=False)
+    stock_name = db.Column(db.String(5), db.ForeignKey('stock.name'), primary_key=True, nullable=False)
     values_of = db.relationship('Stock', backref=db.backref('times', lazy=True))
     def __repr__(self):
         return '<Time %r>' % self.datetime
+
+class Daily(db.Model):
+    day = db.Column(db.String(15), primary_key=True)
+    open_ = db.Column(db.Float)
+    high = db.Column(db.Float)
+    low = db.Column(db.Float)
+    close = db.Column(db.Float)
+    volume = db.Column(db.Integer)
+    stock_name = db.Column(db.String(5), db.ForeignKey('stock.name'), primary_key=True, nullable=False)
+    values_of = db.relationship('Stock', backref=db.backref('days', lazy=True))
+    def __repr__(self):
+        return '<Daily %r>' % self.datetime
 
 db.create_all() #don't know if this works but let's try?
 db.session.commit()
 # class User(db.Model):
 #     id =
+
 @app.route('/')
 @app.route('/login')
 def login():
@@ -122,6 +134,7 @@ def get_stock():
     try:
         ts = TimeSeries(key='IK798ICZ6BMU2EZM')
         data, meta_data = ts.get_intraday(symbol=stock,interval='1min', outputsize='full')
+        day_data, day_meta_data = ts.get_daily(symbol=stock, outputsize='full')
     except:
         raise Exception("Failed to retrieve data from alpha_vantage")
     #Create a new table
@@ -130,6 +143,9 @@ def get_stock():
     for key in data.keys():
         time = Time(datetime=key, open_=data[key]['1. open'], high=data[key]['2. high'], low=data[key]['3. low'], close=data[key]['4. close'], volume=data[key]['5. volume'])
         new_table.times.append(time)
+    for key in day_data.keys():
+        day = Daily(day=key, open_=day_data[key]['1. open'], high=day_data[key]['2. high'], low=day_data[key]['3. low'], close=day_data[key]['4. close'], volume=day_data[key]['5. volume'])
+        new_table.days.append(day)
     sql_session.add(new_table)
     sql_session.commit()
     #Add to the database
@@ -190,11 +206,10 @@ def get_user_info():
 def get_user_stocks():
     user = session.get('user')
     connection = db.engine.connect()
-    query = 'SELECT * FROM users_tracking_stocks WHERE user = \''+user+'\';'
+    query = 'SELECT stock FROM users_tracking_stocks WHERE user = \''+user+'\';'
     result = connection.execute(query)
     user_dict = {}
     for row in result:
-        user_dict[row['stock']] = row['stock']
         user_dict[row['stock']] = row['stock']
     return json.dumps(user_dict)
 
@@ -214,7 +229,7 @@ def find_volatility():
     year = int(request.args.get('year'))
     user = session.get('user')
 
-    date = datetime.date(year, month, day).strftime("%Y-%m-%d") 
+    date = datetime.date(year, month, day).strftime("%Y-%m-%d")
     print(date)
     connection = db.engine.connect()
     advanced_SQL = """
@@ -241,9 +256,9 @@ def most_popular():
     date = datetime.date(year, month, day)
     date_str = date.strftime("%Y-%m-%d")
     connection = db.engine.connect()
-    
+
     advanced_SQL = """
-    SELECT stock, count, close FROM 
+    SELECT stock, count, close FROM
     (SELECT stock, count(*) AS count FROM users_tracking_stocks
     GROUP BY stock) AS s1
     JOIN
@@ -254,12 +269,44 @@ def most_popular():
     result = connection.execute(advanced_SQL, '{date} 16:00:00'.format(date=date_str))
     most_popular = {}
     for row in result:
-        
+
         most_popular[row['stock']] = (row['count'], row['close'])
     return json.dumps(most_popular)
 
-@app.route('/update', methods=['GET'])
-def update_stock_table():
-    return
+@app.route('/update', methods=['POST'])
+def update():
+    now = datetime.datetime.now()
+    date = datetime.date(now.year, now.month, now.day).strftime("%Y-%m-%d")
+    Session = db.create_session(options={'bind':'dest_db_con'})
+    sql_session = Session()
+    connection = db.engine.connect()
+    #For stocks added today, deletes all records where time is today
+    result = connection.execute("""
+    DELETE FROM time WHERE datetime LIKE '{date}%%'
+    """.format(date=date))
+
+    #SQL query returns all stocks not added today
+    result = connection.execute("SELECT name FROM stock")
+    stocks = []
+    for row in result:
+        stocks.append(row["name"])
+    for stock in stocks:
+        print(stock)
+        try:
+            ts = TimeSeries(key='IK798ICZ6BMU2EZM')
+            data, meta_data = ts.get_intraday(symbol=stock, interval='1min', outputsize='full')
+            print(data)
+            print('success')
+        except:
+            # raise Exception("Failed to retrieve data from alpha_vantage")
+            continue
+        adding_table = Stock(name=stock)
+        for key in data.keys():
+            time = Time(datetime=key, open_=data[key]['1. open'], high=data[key]['2. high'], low=data[key]['3. low'], close=data[key]['4. close'], volume=data[key]['5. volume'], stock_name=stock)
+            adding_table.times.append(time)
+            print(getattr(time, 'id') + " "+getattr(time, 'stock_name'))
+        sql_session.merge(adding_table)
+    sql_session.commit()
+    return Response(None)
 if __name__ == '__main__':
     app.run()

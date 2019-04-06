@@ -122,3 +122,16 @@ function call_most_popular(){
     }
   });
 }
+
+function call_update(){
+  $.ajax({
+    url:'/update',
+    type: 'POST',
+    success: function(response){
+      console.log('success');
+    },
+    error: function(response){
+      console.log('error, STOOPID');
+    }
+  });
+}

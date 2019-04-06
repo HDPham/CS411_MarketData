@@ -5,7 +5,6 @@ $(document).ready(function (){
     url:'/get_user_stocks',
     type: 'GET',
     success: function(response){
-      document.getElementById('user_tracked_stocks').value = response;
       make_user_stock_table(response);
     },
     error: function(response){
@@ -20,7 +19,6 @@ function call_get_user_info(){
     type:'GET',
     success: function(response){
       var result = JSON.parse(response);
-      console.log(result.user);
       document.getElementById('user_table_name').innerHTML = result.user;
       document.getElementById('user_table_password').innerHTML = result.password;
     },
@@ -31,7 +29,19 @@ function call_get_user_info(){
 }
 
 function make_user_stock_table(response){
-  var result = JSON.parse(response)
+  var table = document.getElementById('user_stock_table');
+  var result = JSON.parse(response);
+  var length = Object.keys(result).length;
+  console.log(result);
+  for(var i=0; i< length; i++){
+    var table_row = document.createElement('tr');
+    var new_stock = document.createElement('td');
+    new_stock.innerHTML = Object.keys(result)[i];
+    console.log(result[i]);
+    table_row.appendChild(new_stock);
+    table.appendChild(table_row);
+  }
+
 }
 function call_update_user_info(){
   password = document.getElementById('new_password').value;

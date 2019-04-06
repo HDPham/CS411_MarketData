@@ -14,6 +14,7 @@ function user_search(){
       console.log(entries[0][1]);
       if(entries[0][1] == false){
         document.getElementById('error_msg').value = 'Sorry, your username or password was invalid';
+        return;
       }
       window.location.href = '/home';
     },
