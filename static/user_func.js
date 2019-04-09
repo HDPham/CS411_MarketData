@@ -13,6 +13,19 @@ $(document).ready(function (){
   });
 })
 
+function call_portfolio_calculator(){
+  $.ajax({
+    url:'/portfolio_calculator',
+    type: 'GET',
+    success: function(response){
+      document.getElementById('portfolio_results').innerHTML = response;
+    },
+    error: function(response){
+      console.log('error');
+    }
+  });
+}
+
 function call_get_user_info(){
   $.ajax({
     url:'/get_user_info',
@@ -29,20 +42,23 @@ function call_get_user_info(){
 }
 
 function make_user_stock_table(response){
-  var table = document.getElementById('user_stock_table');
-  var result = JSON.parse(response);
-  var length = Object.keys(result).length;
+  var result = response;
   console.log(result);
-  for(var i=0; i< length; i++){
-    var table_row = document.createElement('tr');
-    var new_stock = document.createElement('td');
-    new_stock.innerHTML = Object.keys(result)[i];
-    console.log(result[i]);
-    table_row.appendChild(new_stock);
-    table.appendChild(table_row);
-  }
+  var table = document.getElementById('user_tracked_stocks');
+  console.log(table.children[1]);
+  for(i in result) {
+    var row = table.children[1].insertRow(-1);
+    var cell1 = document.createElement('th');
+    cell1.scope = "row";
+    cell1.innerHTML = 1 + parseInt(i);
+    row.appendChild(cell1);
+    var cell2 = row.insertCell(-1);
+    cell2.innerHTML = result[i].toUpperCase();
 
+  }
+  console.log(table);
 }
+
 function call_update_user_info(){
   password = document.getElementById('new_password').value;
   confirm_password = document.getElementById('confirm_password').value;

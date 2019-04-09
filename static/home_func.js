@@ -40,7 +40,12 @@ function search() {
 }
 function call_add_stock(){
   var current_stock = document.getElementById('current_stock').value;
+  var number_of = parseInt(document.getElementById('number_of_stocks').value);
   console.log(current_stock);
+  console.log(number_of);
+  if(isNaN(number_of)){
+    document.getElementById('stock_output').value = 'Please selected a valid integer';
+  }
   if(current_stock==null){
     document.getElementById('stock_output').value = 'Sorry, you haven\'t selected any stock';
   }
@@ -48,7 +53,8 @@ function call_add_stock(){
     url:'/add_stock',
     type: 'POST',
     data: {
-      stock: current_stock
+      stock: current_stock,
+      number_of: number_of
     },
     success: function(response){
       console.log('success');

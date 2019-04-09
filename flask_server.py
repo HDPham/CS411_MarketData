@@ -1,5 +1,5 @@
-from flask import Flask, render_template, request, Response, session
-import json, datetime
+from flask import Flask, jsonify, render_template, request, Response, session
+import json, datetime, atexit
 app = Flask(__name__, template_folder='templates')
 app.secret_key = '99qVu2YPjy5ss0Z66Igj'
 
@@ -19,18 +19,23 @@ metadata = db.metadata
 
 users_tracking_stocks = db.Table('users_tracking_stocks',
     db.Column('user', db.String(100), db.ForeignKey('user.user'), primary_key=True),
-    db.Column('stock', db.String(5), db.ForeignKey('stock.name'), primary_key=True)
-    )
+    db.Column('stock', db.String(5), db.ForeignKey('stock.name'), primary_key=True),
+    db.Column('number_of', db.Integer)
+)
 
 class User(db.Model):
     user = db.Column(db.String(100), primary_key=True)
     password = db.Column(db.String(100))
+    tot_money = db.Column(db.Float)
+    avail_money = db.Column(db.Float)
+    invest_money = db.Column(db.Float)
     tracked_stocks = db.relationship('Stock', secondary=users_tracking_stocks, lazy='subquery',
                     backref=db.backref('users', lazy=True))
     def __repr__(self):
         return '<User %r' %self.user
 class Stock(db.Model):
     name = db.Column(db.String(5), primary_key=True)
+    number_of = db.Column(db.Integer)
     def __repr__(self):
         return '<Stock %r>' % self.name
 class Time(db.Model):
@@ -43,7 +48,7 @@ class Time(db.Model):
     stock_name = db.Column(db.String(5), db.ForeignKey('stock.name'), primary_key=True, nullable=False)
     values_of = db.relationship('Stock', backref=db.backref('times', lazy=True))
     def __repr__(self):
-        return '<Time %r>' % self.datetime
+        return '<Time id:{0}, stock_name:{1}>'.format(self.datetime, self.stock_name)
 
 class Daily(db.Model):
     day = db.Column(db.String(15), primary_key=True)
@@ -164,12 +169,23 @@ def get_stock():
 def add_stock():
     user = session['user']
     stock = request.form.get('stock')
+    number_of = request.form.get('number_of')
     connection = db.engine.connect()
     #check if stock and user are already associated
     values = connection.execute('SELECT * FROM users_tracking_stocks WHERE user = \'' + user + '\' AND stock=\"'+stock+'\";').first()
     if(values is not None):
+        result = connection.execute('SELECT number_of FROM users_tracking_stocks WHERE user = \'' + user + '\' AND stock=\"'+stock+'\";')
+        tot = int(number_of)
+        print(type(tot))
+        for row in result:  #guaranteed to be only one result; TRICKESY BAGGINS LOOP @ Golem
+            tot = tot + int(row['number_of'])
+        if (tot <= 0):
+            return Response(None)
+        raw_SQL = "UPDATE users_tracking_stocks SET number_of = \'"+str(tot)+'\' WHERE user = \'' + user + '\' AND stock=\"'+stock+'\";'
+        result = connection.execute(raw_SQL)
+        connection.close()
         return Response(None)
-    raw_SQL = "INSERT INTO users_tracking_stocks(user, stock) VALUES (\""+user+"\", \""+stock+"\");"
+    raw_SQL = "INSERT INTO users_tracking_stocks(user, stock, number_of) VALUES (\""+user+"\", \""+stock+"\", \""+number_of+"\");"
     result = connection.execute(raw_SQL)
     connection.close()
     return Response(None)
@@ -208,10 +224,10 @@ def get_user_stocks():
     connection = db.engine.connect()
     query = 'SELECT stock FROM users_tracking_stocks WHERE user = \''+user+'\';'
     result = connection.execute(query)
-    user_dict = {}
+    user_list = []
     for row in result:
-        user_dict[row['stock']] = row['stock']
-    return json.dumps(user_dict)
+        user_list.append(row[0])
+    return jsonify(user_list)
 
 @app.route('/update_user_info', methods=['POST'])
 def update_user_info():
@@ -295,18 +311,67 @@ def update():
         try:
             ts = TimeSeries(key='IK798ICZ6BMU2EZM')
             data, meta_data = ts.get_intraday(symbol=stock, interval='1min', outputsize='full')
-            print(data)
             print('success')
         except:
             # raise Exception("Failed to retrieve data from alpha_vantage")
             continue
         adding_table = Stock(name=stock)
+        print(adding_table)
         for key in data.keys():
             time = Time(datetime=key, open_=data[key]['1. open'], high=data[key]['2. high'], low=data[key]['3. low'], close=data[key]['4. close'], volume=data[key]['5. volume'], stock_name=stock)
             adding_table.times.append(time)
-            print(getattr(time, 'id') + " "+getattr(time, 'stock_name'))
+            print(time)
         sql_session.merge(adding_table)
     sql_session.commit()
     return Response(None)
+
+@app.route('/portfolio_calculator', methods=['GET'])
+def portfolio_calculator():
+    now = datetime.datetime.now()
+    date = datetime.date(now.year, now.month, now.day).strftime("%Y-%m-%d")
+    year5_ago = datetime.date(now.year-5, now.month, now.day).strftime("%Y-%m-%d")
+    user = session.get('user')
+    info_dict = {}
+    connection = db.engine.connect()
+    #First thing is to figure out the average return
+    sql_query = """
+    SELECT t1.stock_name AS stock, AVG((t1.open_ - t2.open_)/t2.open_) AS average_return
+    FROM daily as t1, daily as t2
+    WHERE (t1.day BETWEEN '{year5_ago}' AND '{today}') AND
+     t1.stock_name = t2.stock_name AND datediff(t1.day, t2.day) = 1 AND
+     t1.stock_name IN (
+        SELECT stock
+        FROM users_tracking_stocks
+        WHERE user = '{user}'
+        )
+    GROUP BY t1.stock_name;
+    """.format(user=user, year5_ago=year5_ago, today=date)
+    result = connection.execute(sql_query)
+    for row in result:
+        info_dict[row['stock']] = []
+        info_dict[row['stock']].append(row['average_return'])
+    #Then calculate the variance and standard deviation over the same period
+    variance = """
+    SELECT d.stock_name as stock, VARIANCE(d.open_) as variance, STDDEV(d.open_) as deviation
+    FROM daily as d
+    WHERE (d.day BETWEEN '{year5_ago}' AND '{today}') AND
+    d.stock_name IN (
+       SELECT stock
+       FROM users_tracking_stocks
+       WHERE user = '{user}'
+       )
+    GROUP BY d.stock_name;
+     """.format(user=user, year5_ago=year5_ago, today=date)
+    var_result = connection.execute(variance)
+    for row in var_result:
+        print(row['variance'])
+        info_dict[row['stock']].append(row['variance'])
+        info_dict[row['stock']].append(row['deviation'])
+
+    return json.dumps(info_dict)
+@atexit.register
+def clean_up():
+    session.clear()
+
 if __name__ == '__main__':
     app.run()

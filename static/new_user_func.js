@@ -14,6 +14,7 @@ function call_insert_user(){
     },
     error: function(response){
       console.log('error');
+      document.getElementById('error_msg').value = 'Sorry, something went wrong in processing your request'
     }
   });
 }
