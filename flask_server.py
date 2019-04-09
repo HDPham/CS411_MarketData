@@ -1,16 +1,23 @@
 from flask import Flask, render_template, request, Response
 import json
-app = Flask(__name__, template_folder='templates')
 
 # get mySQL into flask app
 from flask_sqlalchemy import SQLAlchemy
 #Get stock data API
 from alpha_vantage.timeseries import TimeSeries     #If something goes wrong with stock data stuff, it's here
 
+app = Flask(__name__, template_folder='templates')
 
 #Note: On the actual webserver, will need to CREATE USER with full privileges
 # After creating the user, then create database
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://cs411proj:Password_123@localhost/stock_data" #change to mySQL later
+SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://{username}:{password}@{hostname}/{databasename}".format(
+    username="cs411proj",
+    password="Password_123",
+    hostname="cs411proj.mysql.pythonanywhere-services.com",
+    databasename="cs411proj$stock_data",
+)
+app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI #change to mySQL later
+app.config["SQLALCHEMY_POOL_RECYCLE"] = 299
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -27,7 +34,7 @@ class User(db.Model):
     tracked_stocks = db.relationship('Stock', secondary=users_tracking_stocks, lazy='subquery',
                     backref=db.backref('users', lazy=True))
     def __repr__(self):
-        return '<User %r' %self.user
+        return '<User %r>' %self.user
 
 class Stock(db.Model):
     name = db.Column(db.String(5), primary_key=True)
@@ -57,6 +64,7 @@ def login():
 def home (user):
     user = user.capitalize()
     db.create_all() #don't know if this works but let's try?
+    db.session.commit()
     return render_template('/home.html', **locals())
 
 @app.route('/create_user')
@@ -123,7 +131,6 @@ def get_stock():
         time = Time(datetime=key, open_=data[key]['1. open'], high=data[key]['2. high'], low=data[key]['3. low'], close=data[key]['4. close'], volume=data[key]['5. volume'])
         new_table.times.append(time)
     session.add(new_table)
-    session.commit()
     #Add to the database
     try:
         values = engine.execute("SELECT * FROM time WHERE stock_name=\""+stock+"\";")
@@ -152,4 +159,4 @@ def add_stock():
 def update_stock_table():
     return
 if __name__ == '__main__':
-    app.run()
+    app.run(port=5001)
