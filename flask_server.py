@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, render_template, request, Response, session
 import json, datetime, atexit
+import pandas as pd, pandas.io.sql as psql
 app = Flask(__name__, template_folder='templates')
 app.secret_key = '99qVu2YPjy5ss0Z66Igj'
 
@@ -12,6 +13,7 @@ from alpha_vantage.timeseries import TimeSeries     #If something goes wrong wit
 #Note: On the actual webserver, will need to CREATE USER with full privileges
 # After creating the user, then create database
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://cs411proj:Password_123@localhost/stock_data" #change to mySQL later
+app.config["SQLALCHEMY_POOL_RECYCLE"] = 299
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -46,7 +48,7 @@ class Time(db.Model):
     close = db.Column(db.Float)
     volume = db.Column(db.Integer)
     stock_name = db.Column(db.String(5), db.ForeignKey('stock.name'), primary_key=True, nullable=False)
-    values_of = db.relationship('Stock', backref=db.backref('times', lazy=True))
+    values_of = db.relationship('Stock', backref=db.backref('times', lazy=True, cascade='all, delete-orphan'))
     def __repr__(self):
         return '<Time id:{0}, stock_name:{1}>'.format(self.datetime, self.stock_name)
 
@@ -307,20 +309,16 @@ def update():
     for row in result:
         stocks.append(row["name"])
     for stock in stocks:
-        print(stock)
         try:
             ts = TimeSeries(key='IK798ICZ6BMU2EZM')
             data, meta_data = ts.get_intraday(symbol=stock, interval='1min', outputsize='full')
-            print('success')
         except:
             # raise Exception("Failed to retrieve data from alpha_vantage")
             continue
         adding_table = Stock(name=stock)
-        print(adding_table)
         for key in data.keys():
-            time = Time(datetime=key, open_=data[key]['1. open'], high=data[key]['2. high'], low=data[key]['3. low'], close=data[key]['4. close'], volume=data[key]['5. volume'], stock_name=stock)
+            time = Time(datetime=key, open_=data[key]['1. open'], high=data[key]['2. high'], low=data[key]['3. low'], close=data[key]['4. close'], volume=data[key]['5. volume'])
             adding_table.times.append(time)
-            print(time)
         sql_session.merge(adding_table)
     sql_session.commit()
     return Response(None)
@@ -367,7 +365,47 @@ def portfolio_calculator():
         print(row['variance'])
         info_dict[row['stock']].append(row['variance'])
         info_dict[row['stock']].append(row['deviation'])
-
+    #Calculate covariance, and beta, for each stock
+    # avg_open = """
+    # SELECT d.stock_name as stock, AVG(d.open_) as averages
+    # FROM daily as d
+    # WHERE (d.day BETWEEN '{year5_ago}' AND '{today}') AND
+    # d.stock_name IN (
+    #    SELECT stock
+    #    FROM users_tracking_stocks
+    #    WHERE user = '{user}'
+    #    )
+    # GROUP by d.stock_name
+    # """.format(user=user, today=date, year5_ago=year5_ago)
+    # values = """
+    # SELECT d.stock_name as stock, d.open_ as open
+    # FROM daily as d
+    # WHERE d.stock_name IN(
+    #    SELECT stock
+    #    FROM users_tracking_stocks
+    #    WHERE user = '{user}'
+    #    )
+    # GROUP BY d.stock_name
+    # """
+    # avg_open_result = connection.execute(avg_open)
+    # values_result = connection.execute(values)
+    # for out_row in avg_open_result:
+    #     for in_row in values_result:
+    #         if(out_row['stock'] != in_row['stock'])
+    #             continue
+    values = """
+    SELECT d.open_, d.day
+    FROM daily as d
+    WHERE d.stock_name IN (
+        SELECT stock
+        FROM users_tracking_stocks
+        WHERE user = '{user}'
+        ) OR d.stock_name='SPY'
+    GROUP BY d.stock_name;
+    """.format(user=user)
+    df = psql.read_sql(values, con=connection)
+    new_df = df.groupby(['stock']).cov()
+    print(new_df)
     return json.dumps(info_dict)
 @atexit.register
 def clean_up():
