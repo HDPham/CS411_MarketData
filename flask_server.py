@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, render_template, request, Response, session
 import json, datetime, atexit
 import pandas as pd, pandas.io.sql as psql
+import numpy as np
 app = Flask(__name__, template_folder='templates')
 app.secret_key = '99qVu2YPjy5ss0Z66Igj'
 
@@ -60,7 +61,7 @@ class Daily(db.Model):
     close = db.Column(db.Float)
     volume = db.Column(db.Integer)
     stock_name = db.Column(db.String(5), db.ForeignKey('stock.name'), primary_key=True, nullable=False)
-    values_of = db.relationship('Stock', backref=db.backref('days', lazy=True))
+    values_of = db.relationship('Stock', backref=db.backref('days', lazy=True, cascade='all, delete-orphan'))
     def __repr__(self):
         return '<Daily %r>' % self.datetime
 
@@ -312,6 +313,8 @@ def update():
         try:
             ts = TimeSeries(key='IK798ICZ6BMU2EZM')
             data, meta_data = ts.get_intraday(symbol=stock, interval='1min', outputsize='full')
+            day_data, day_meta_data = ts.get_daily(symbol=stock)
+            print(day_data)
         except:
             # raise Exception("Failed to retrieve data from alpha_vantage")
             continue
@@ -319,7 +322,11 @@ def update():
         for key in data.keys():
             time = Time(datetime=key, open_=data[key]['1. open'], high=data[key]['2. high'], low=data[key]['3. low'], close=data[key]['4. close'], volume=data[key]['5. volume'])
             adding_table.times.append(time)
+        for key in day_data.keys():
+            day = Daily(day=key, open_=day_data[key]['1. open'], high=day_data[key]['2. high'], low=day_data[key]['3. low'], close=day_data[key]['4. close'], volume=day_data[key]['5. volume'])
+            adding_table.days.append(day)
         sql_session.merge(adding_table)
+    sql_session.flush()
     sql_session.commit()
     return Response(None)
 
@@ -328,6 +335,7 @@ def portfolio_calculator():
     now = datetime.datetime.now()
     date = datetime.date(now.year, now.month, now.day).strftime("%Y-%m-%d")
     year5_ago = datetime.date(now.year-5, now.month, now.day).strftime("%Y-%m-%d")
+    year3_ago = datetime.date(now.year-3, now.month, now.day).strftime("%Y-%m-%d")
     user = session.get('user')
     info_dict = {}
     connection = db.engine.connect()
@@ -362,50 +370,40 @@ def portfolio_calculator():
      """.format(user=user, year5_ago=year5_ago, today=date)
     var_result = connection.execute(variance)
     for row in var_result:
-        print(row['variance'])
         info_dict[row['stock']].append(row['variance'])
         info_dict[row['stock']].append(row['deviation'])
-    #Calculate covariance, and beta, for each stock
-    # avg_open = """
-    # SELECT d.stock_name as stock, AVG(d.open_) as averages
-    # FROM daily as d
-    # WHERE (d.day BETWEEN '{year5_ago}' AND '{today}') AND
-    # d.stock_name IN (
-    #    SELECT stock
-    #    FROM users_tracking_stocks
-    #    WHERE user = '{user}'
-    #    )
-    # GROUP by d.stock_name
-    # """.format(user=user, today=date, year5_ago=year5_ago)
-    # values = """
-    # SELECT d.stock_name as stock, d.open_ as open
-    # FROM daily as d
-    # WHERE d.stock_name IN(
-    #    SELECT stock
-    #    FROM users_tracking_stocks
-    #    WHERE user = '{user}'
-    #    )
-    # GROUP BY d.stock_name
-    # """
-    # avg_open_result = connection.execute(avg_open)
-    # values_result = connection.execute(values)
-    # for out_row in avg_open_result:
-    #     for in_row in values_result:
-    #         if(out_row['stock'] != in_row['stock'])
-    #             continue
+
+    #Finding the covariance; SQL sucks to do stats, so converting query into pandas dataframe
     values = """
-    SELECT d.open_, d.day
+    SELECT d.day as day, d.stock_name as stock, d.open_ as open
     FROM daily as d
-    WHERE d.stock_name IN (
+    WHERE (d.day BETWEEN '{year5_ago}' AND '{today}') AND d.stock_name IN (
         SELECT stock
         FROM users_tracking_stocks
         WHERE user = '{user}'
         ) OR d.stock_name='SPY'
-    GROUP BY d.stock_name;
-    """.format(user=user)
-    df = psql.read_sql(values, con=connection)
-    new_df = df.groupby(['stock']).cov()
-    print(new_df)
+    """.format(user=user, year5_ago=year5_ago, today=date)
+    df = psql.read_sql(values, con=connection, columns=['day', 'stock', 'open'])
+    df['day'] = pd.to_datetime(df['day'])
+    df = df.loc[(df['day']>=year3_ago) & (df['day'] <= date)]
+    #Gives mean and every stock the user is tracking
+    means = df.groupby('stock', sort=False, group_keys=True).agg({'open':np.mean})
+    #Pivots table so each stock gets it's own column and then we can get covariance
+    stock_pivot = pd.pivot_table(df, index=['day'], columns=['stock'])
+    print(stock_pivot.to_string)
+    for i in means.index:
+        # stock_pivot[i+'_return'] = stock_pivot[('open', i)].apply(lambda x: (x.shift(-1) - x) / x)
+        stock_pivot[('return', i)] = (stock_pivot[('open', i)].shift(-1) - stock_pivot[('open', i)]) / stock_pivot[('open', i)]
+
+    covariance = stock_pivot.cov()
+    for i in means.index:
+        if(i == 'SPY'):
+            continue
+        info_dict[i].append(covariance[('return', i)][('return', 'SPY')])
+        beta = info_dict[i][3] / covariance[('return', 'SPY')][('return', 'SPY')]
+        info_dict[i].append(beta)
+        # for j in compare_dates.values():
+
     return json.dumps(info_dict)
 @atexit.register
 def clean_up():

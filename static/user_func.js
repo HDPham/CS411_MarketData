@@ -18,7 +18,7 @@ function call_portfolio_calculator(){
     url:'/portfolio_calculator',
     type: 'GET',
     success: function(response){
-      document.getElementById('portfolio_results').innerHTML = response;
+      document.getElementById('portfolio_results').innerHTML = "Stock: [Average daily return, price variance, std. dev. of price, covariance of stock with market, beta] "+ " " +response;
     },
     error: function(response){
       console.log('error');
