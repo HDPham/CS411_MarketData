@@ -294,16 +294,19 @@ def most_popular():
 
 @app.route('/update', methods=['POST'])
 def update():
+    #Get value of today
     now = datetime.datetime.now()
+    #Convert today into acceptable datetime string
     date = datetime.date(now.year, now.month, now.day).strftime("%Y-%m-%d")
+    #Start a session in sqlalchemy so data we write is saved
     Session = db.create_session(options={'bind':'dest_db_con'})
     sql_session = Session()
+    # connection variable provides bridge between Python and SQL
     connection = db.engine.connect()
-    #For stocks added today, deletes all records where time is today
+    #For stocks added today, deletes all records where time is today since update will update all stocks with values of today
     result = connection.execute("""
     DELETE FROM time WHERE datetime LIKE '{date}%%'
     """.format(date=date))
-
     #SQL query returns all stocks not added today
     result = connection.execute("SELECT name FROM stock")
     stocks = []
@@ -312,23 +315,24 @@ def update():
     for stock in stocks:
         try:
             ts = TimeSeries(key='IK798ICZ6BMU2EZM')
-            data, meta_data = ts.get_intraday(symbol=stock, interval='1min', outputsize='full')
-            day_data, day_meta_data = ts.get_daily(symbol=stock)
-            print(day_data)
+            data, meta_data = ts.get_intraday(symbol=stock, interval='1min', outputsize='full') #get stock prices minute by minute
+            day_data, day_meta_data = ts.get_daily(symbol=stock) #Get daily stock prices of last 100 days
         except:
             # raise Exception("Failed to retrieve data from alpha_vantage")
             continue
-        adding_table = Stock(name=stock)
+        adding_table = Stock(name=stock)    #Create new table that we will add minute and day time data --> purpose is to be merged with existing table
         for key in data.keys():
+            #Create a new Time record then add it to the stock
             time = Time(datetime=key, open_=data[key]['1. open'], high=data[key]['2. high'], low=data[key]['3. low'], close=data[key]['4. close'], volume=data[key]['5. volume'])
             adding_table.times.append(time)
         for key in day_data.keys():
+            #Create a new Daily record then add it othe stock
             day = Daily(day=key, open_=day_data[key]['1. open'], high=day_data[key]['2. high'], low=day_data[key]['3. low'], close=day_data[key]['4. close'], volume=day_data[key]['5. volume'])
             adding_table.days.append(day)
         sql_session.merge(adding_table)
-    sql_session.flush()
-    sql_session.commit()
-    return Response(None)
+    sql_session.flush() #Flush cuz error message told me to
+    sql_session.commit()    #commit the new info
+    return Response(None)   #Not getting any info for server, so we return it 
 
 @app.route('/portfolio_calculator', methods=['GET'])
 def portfolio_calculator():
