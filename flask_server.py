@@ -332,8 +332,6 @@ def update():
             #Create a new Daily record then add it othe stock
             if(date not in key):
                 continue
-            if(stock == 'AAPL' or stock=='AUBN' or stock=='GE' or stock=='PCYO'):
-                continue
             connection.execute('INSERT INTO daily(day, open_, high, low, close, volume, stock_name) VALUES (\''+key+'\', '+day_data[key]['1. open']+', '+day_data[key]['2. high']+', '+day_data[key]['3. low']+', '+day_data[key]['4. close']+', '+day_data[key]['5. volume']+', \''+stock+'\');')
         time.sleep(30)
 
