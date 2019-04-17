@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, render_template, request, Response, session
+from us_treasury_scrap import web_scrap_treasury
 import json, datetime, atexit, time
 import pandas as pd, pandas.io.sql as psql
 import numpy as np
@@ -413,6 +414,8 @@ def portfolio_calculator():
         beta = info_dict[i][3] / covariance[('return', 'SPY')][('return', 'SPY')]
         info_dict[i].append(beta)
         # for j in compare_dates.values():
+
+    print(web_scrap_treasury())
 
     return json.dumps(info_dict)
 @atexit.register
