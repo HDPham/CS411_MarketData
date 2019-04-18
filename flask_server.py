@@ -131,12 +131,12 @@ def get_stock():
     #Try to get data
     values = engine.execute("SELECT * FROM time WHERE stock_name=\""+stock+"\";").first()
     if(values is not None):
-        values = engine.execute("SELECT * FROM time WHERE stock_name=\""+stock+"\";").fetchall()
+        values = engine.execute("SELECT * FROM daily WHERE stock_name=\""+stock+"\";").fetchall()
         connection.close()
         sql_session.close()
         stock_dict = {}
         for row in values:
-            stock_dict[row["datetime"]] = (float(row['open_']), float(row['high']), float(row['low']), float(row['close']), float(row['volume']))
+            stock_dict[row["day"]] = (float(row['open_']), float(row['high']), float(row['low']), float(row['close']), float(row['volume']))
         return json.dumps(stock_dict)
 
     # If it fails, add the data to the db
@@ -159,14 +159,14 @@ def get_stock():
     sql_session.commit()
     #Add to the database
     try:
-        values = engine.execute("SELECT * FROM time WHERE stock_name=\""+stock+"\";")
+        values = engine.execute("SELECT * FROM daily WHERE stock_name=\""+stock+"\";")
     finally:
         connection.close()
     sql_session.close()
     # Add the data to the db after grabbing it
     stock_dict = {}
     for row in values:
-        stock_dict[row["datetime"]] = (float(row['open_']), float(row['high']), float(row['low']), float(row['close']), float(row['volume']))
+        stock_dict[row["day"]] = (float(row['open_']), float(row['high']), float(row['low']), float(row['close']), float(row['volume']))
     return json.dumps(stock_dict)
 
 @app.route('/add_stock', methods=['POST'])

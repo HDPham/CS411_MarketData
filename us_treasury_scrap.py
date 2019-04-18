@@ -9,7 +9,7 @@ def web_scrap_treasury():
     date = datetime.date(now.year, now.month, now.day-1).strftime("%Y-%m-%d")
     page = requests.get('https://data.treasury.gov/feed.svc/DailyTreasuryBillRateData?$filter=month(INDEX_DATE)%20eq%204%20and%20year(INDEX_DATE)%20eq%202019')
     tree = etree.parse(BytesIO(page.content))
-    
+
     root = tree.getroot()
     date_tags = root.findall('.//{http://schemas.microsoft.com/ado/2007/08/dataservices}INDEX_DATE')
     parent_tag = None
