@@ -323,16 +323,20 @@ def update():
         adding_table = Stock(name=stock)    #Create new table that we will add minute and day time data --> purpose is to be merged with existing table
         for key in data.keys():
             #Create a new Time record then add it to the stock
+            if (date not in key):
+                continue
             time = Time(datetime=key, open_=data[key]['1. open'], high=data[key]['2. high'], low=data[key]['3. low'], close=data[key]['4. close'], volume=data[key]['5. volume'])
             adding_table.times.append(time)
         for key in day_data.keys():
             #Create a new Daily record then add it othe stock
+            if (date not in key):
+                continue
             day = Daily(day=key, open_=day_data[key]['1. open'], high=day_data[key]['2. high'], low=day_data[key]['3. low'], close=day_data[key]['4. close'], volume=day_data[key]['5. volume'])
             adding_table.days.append(day)
         sql_session.merge(adding_table)
     sql_session.flush() #Flush cuz error message told me to
     sql_session.commit()    #commit the new info
-    return Response(None)   #Not getting any info for server, so we return it 
+    return Response(None)   #Not getting any info for server, so we return it
 
 @app.route('/portfolio_calculator', methods=['GET'])
 def portfolio_calculator():

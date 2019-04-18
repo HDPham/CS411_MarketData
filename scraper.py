@@ -104,7 +104,7 @@ def trading_day():
     else:
         return True
 
-# Retrieves data from alpha_vantage and inserts stock data that hasn't already been inserted.
+# Updates DB with most recent data from specified stock.
 # Assumes that all stocks are updated on the same day (via the last_update class variable).
 # Robust function that will work for both daily updates or weekly updates.
 def insert_stock_data(stock_name, av_key):
@@ -118,7 +118,7 @@ def insert_stock_data(stock_name, av_key):
 
     row = 0
     insertion_row = False
-    while (not insertion_row):
+    while not insertion_row:
         date, time = time_data[row].split(' ')
         row_year, row_month, row_day = date.split('-')
         # Greater year than the last update implies the row is not in the DB
@@ -136,8 +136,8 @@ def insert_stock_data(stock_name, av_key):
             if (row == len(data)):
                 break
     # iterate through remaining rows, insert data into DB
-    for (i in range(row:len(data))):
-        connection.execute("INSERT INTO time(datetime, open, high, low, close, volume, stock_name)" + "VALUES (\"" + time_data[i] + "\", \"" + data['1. open'][i] + "\", \"" + data['2. high'][i] + "\", \"" + data['3. low'][i] + "\", \"" + data['4. close'][i] + "\", \"" + data['5. volume'][i] + "\", \"" + stock_name + "\");")
+    for i in range(row,len(data)):
+        connection.execute("INSERT INTO time(datetime, open_, high, low, close, volume, stock_name)" + "VALUES (\"" + time_data[i] + "\", \"" + str(data['1. open'][i]) + "\", \"" + str(data['2. high'][i]) + "\", \"" + str(data['3. low'][i]) + "\", \"" + str(data['4. close'][i]) + "\", \"" + str(data['5. volume'][i]) + "\", \"" + stock_name + "\");")
         ### MIGHT NEED TRY CATCH FOR DUPLICATE INSERTION ERROR
 
 
@@ -145,6 +145,7 @@ def insert_stock_data(stock_name, av_key):
 stock_list = ['cy', 'aapl', 'goog']
 
 def collect_data(list_idx):
+    print('collect_data()')
     # Update DB with intraday stock data
     insert_stock_data(stock_list[list_idx], 'IK798ICZ6BMU2EZM')
 
@@ -178,8 +179,13 @@ def daily_timer():
     secs = delta_t.seconds + 1
     t = Timer(secs, daily_timer)
     t.start()
-
+    # if today is a trading day, collect data
     if (trading_day()):
-        # class variable that keeps track of when the last update was (this is definitely in the wrong spot, it's just pseudocode for now)
         last_update = date.today()
         collect_data(0)
+
+
+# Initialize last_update
+last_update = date(1774, 7, 4)
+# Engage webscraper
+daily_timer()
