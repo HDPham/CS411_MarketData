@@ -347,6 +347,7 @@ def portfolio_calculator():
     date = datetime.date(now.year, now.month, now.day).strftime("%Y-%m-%d")
     year5_ago = datetime.date(now.year-5, now.month, now.day).strftime("%Y-%m-%d")
     year3_ago = datetime.date(now.year-3, now.month, now.day).strftime("%Y-%m-%d")
+    year1_ago = datetime.date(now.year-1, now.month, now.day).strftime("%Y-%m-%d")
     user = session.get('user')
     info_dict = {}
     connection = db.engine.connect()
@@ -401,21 +402,26 @@ def portfolio_calculator():
     means = df.groupby('stock', sort=False, group_keys=True).agg({'open':np.mean})
     #Pivots table so each stock gets it's own column and then we can get covariance
     stock_pivot = pd.pivot_table(df, index=['day'], columns=['stock'])
-    print(stock_pivot.to_string)
     for i in means.index:
         # stock_pivot[i+'_return'] = stock_pivot[('open', i)].apply(lambda x: (x.shift(-1) - x) / x)
         stock_pivot[('return', i)] = (stock_pivot[('open', i)].shift(-1) - stock_pivot[('open', i)]) / stock_pivot[('open', i)]
 
     covariance = stock_pivot.cov()
+    risk_free_return = web_scrap_treasury()
+    print(risk_free_return)
     for i in means.index:
         if(i == 'SPY'):
             continue
         info_dict[i].append(covariance[('return', i)][('return', 'SPY')])
         beta = info_dict[i][3] / covariance[('return', 'SPY')][('return', 'SPY')]
         info_dict[i].append(beta)
-        # for j in compare_dates.values():
+        # calculate alpha
+        print(stock_pivot.index.values)
+        print(pd.to_datetime(date))
+        realized_return = (stock_pivot.loc[date+"T00:00:00.000000000", ('open', i)] - stock_pivot.loc[year1_ago+"T00:00:00.000000000", ('open', i)]) / stock_pivot.loc[year1_ago+"T00:00:00.000000000", ('open', i)]
+        print(realized_return)
 
-    print(web_scrap_treasury())
+
 
     return json.dumps(info_dict)
 @atexit.register
