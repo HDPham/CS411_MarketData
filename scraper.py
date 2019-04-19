@@ -6,30 +6,14 @@ from datetime import date, datetime, timedelta
 from threading import Timer
 import random
 
-app = Flask(__name__, template_folder='templates')
-app.secret_key = '99qVu2YPjy5ss0Z66Igj'
+
 
 # get mySQL into flask app
 from flask_sqlalchemy import SQLAlchemy
 #Get stock data API
 from alpha_vantage.timeseries import TimeSeries
 
-#Note: On the actual webserver, will need to CREATE USER with full privileges
-# After creating the user, then create database
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://cs411proj:Password_123@localhost/stock_data" #change to mySQL later
-##### NOT SURE IF I NEED THIS #####
-#####app.config["SQLALCHEMY_POOL_RECYCLE"] = 299
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
 
-##### NOT SURE IF I NEED THESE #####
-#####metadata = db.metadata
-
-#####Session = db.create_session(options={'bind':'dest_db_con'})
-#####sql_session = Session()
-
-# connection variable provides bridge between Python and SQL
-connection = db.engine.connect()
 
 
 # Keeps track of market holidays (i.e.: days that the markets are closed).
@@ -86,106 +70,131 @@ class Holidays:
         cls.holidays.append(date(year, 12, 25))
 
 
-# Outputs True or False based on whether the markets are open on the current day
-def trading_day():
-    # Obtain today's date
-    today = date.today()
-    # If today is the first day of the year, compute all market holidays for the year
-    if (today.month == 1 and today.day == 1):
-        Holidays.compute_holidays(today.year)
-    # Obtain today's weekday
-    weekday = today.weekday()
-    # Outputs False if today is a Saturday or a Sunday
-    if (weekday == 5 or weekday == 6):
-        return False
-    # Outputs False if today is a market holiday
-    elif (today in Holidays.holidays):
-        return False
-    else:
-        return True
+class Scrape:
 
-# Updates DB with most recent data from specified stock.
-# Assumes that all stocks are updated on the same day (via the last_update class variable).
-# Robust function that will work for both daily updates or weekly updates.
-def insert_stock_data(stock_name, av_key):
-    ts = TimeSeries(key=av_key, output_format='pandas')
-    data, meta_data = ts.get_intraday(symbol=stock_name, interval='1min', outputsize='full')
-    """
-    maybe put a try catch at this point in case there's an AV failure?
-    """
-    # date + time data sorted low to high (oldest to newest)
-    time_data = data.index
+    def __init__(self):
+        print("Webscraper Online")
+        app = Flask(__name__, template_folder='templates')
+        app.secret_key = '99qVu2YPjy5ss0Z66Igj'
 
-    row = 0
-    insertion_row = False
-    while not insertion_row:
-        date, time = time_data[row].split(' ')
-        row_year, row_month, row_day = date.split('-')
-        # Greater year than the last update implies the row is not in the DB
-        if (int(row_year) > last_update.year):
-            insertion_row = True
-        # Greater month than the last update implies the row is not in the DB
-        elif (int(row_month) > last_update.month):
-            insertion_row = True
-        # Greater day than the last update implies the row is not in the DB
-        elif (int(row_day) > last_update.day):
-            insertion_row = True
+        #Note: On the actual webserver, will need to CREATE USER with full privileges
+        # After creating the user, then create database
+        app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://cs411proj:Password_123@localhost/stock_data" #change to mySQL later
+        ##### NOT SURE IF I NEED THIS #####
+        #####app.config["SQLALCHEMY_POOL_RECYCLE"] = 299
+        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        db = SQLAlchemy(app)
+
+        ##### NOT SURE IF I NEED THESE #####
+        #####metadata = db.metadata
+
+        #####Session = db.create_session(options={'bind':'dest_db_con'})
+        #####sql_session = Session()
+
+        # connection variable provides bridge between Python and SQL
+        self.connection = db.engine.connect()
+
+        # Initialize last_update
+        self.last_update = date(1774, 7, 4)
+        self.stock_list = ['cy', 'aapl', 'goog']
+
+        self.go()
+
+    def go(self):
+        # Engage webscraper
+        self.daily_timer()
+        self.collect_data(0)
+
+    # Outputs True or False based on whether the markets are open on the current day
+    def trading_day(self):
+        # Obtain today's date
+        today = date.today()
+        # If today is the first day of the year, compute all market holidays for the year
+        if (today.month == 1 and today.day == 1):
+            Holidays.compute_holidays(today.year)
+        # Obtain today's weekday
+        weekday = today.weekday()
+        # Outputs False if today is a Saturday or a Sunday
+        if (weekday == 5 or weekday == 6):
+            return False
+        # Outputs False if today is a market holiday
+        elif (today in Holidays.holidays):
+            return False
         else:
-            row = row + 1
-            # in the case that all tuples have already been inserted, prevents infinite loop
-            if (row == len(data)):
-                break
-    # iterate through remaining rows, insert data into DB
-    for i in range(row,len(data)):
-        connection.execute("INSERT INTO time(datetime, open_, high, low, close, volume, stock_name)" + "VALUES (\"" + time_data[i] + "\", \"" + str(data['1. open'][i]) + "\", \"" + str(data['2. high'][i]) + "\", \"" + str(data['3. low'][i]) + "\", \"" + str(data['4. close'][i]) + "\", \"" + str(data['5. volume'][i]) + "\", \"" + stock_name + "\");")
-        ### MIGHT NEED TRY CATCH FOR DUPLICATE INSERTION ERROR
+            return True
+
+    # Updates DB with most recent data from specified stock.
+    # Assumes that all stocks are updated on the same day (via the last_update class variable).
+    # Robust function that will work for both daily updates or weekly updates.
+    def insert_stock_data(self, stock_name, av_key):
+        ts = TimeSeries(key=av_key, output_format='pandas')
+        data, meta_data = ts.get_intraday(symbol=stock_name, interval='1min', outputsize='full')
+        """
+        maybe put a try catch at this point in case there's an AV failure?
+        """
+        # date + time data sorted low to high (oldest to newest)
+        time_data = data.index
+
+        row = 0
+        insertion_row = False
+        while not insertion_row:
+            date, time = time_data[row].split(' ')
+            row_year, row_month, row_day = date.split('-')
+            # Greater year than the last update implies the row is not in the DB
+            if (int(row_year) > self.last_update.year):
+                insertion_row = True
+            # Greater month than the last update implies the row is not in the DB
+            elif (int(row_month) > self.last_update.month):
+                insertion_row = True
+            # Greater day than the last update implies the row is not in the DB
+            elif (int(row_day) > self.last_update.day):
+                insertion_row = True
+            else:
+                row = row + 1
+                # in the case that all tuples have already been inserted, prevents infinite loop
+                if (row == len(data)):
+                    break
+        # iterate through remaining rows, insert data into DB
+        for i in range(row,len(data)):
+            self.connection.execute("INSERT INTO time(datetime, open_, high, low, close, volume, stock_name)" + "VALUES (\"" + time_data[i] + "\", \"" + str(data['1. open'][i]) + "\", \"" + str(data['2. high'][i]) + "\", \"" + str(data['3. low'][i]) + "\", \"" + str(data['4. close'][i]) + "\", \"" + str(data['5. volume'][i]) + "\", \"" + stock_name + "\");")
+            ### MIGHT NEED TRY CATCH FOR DUPLICATE INSERTION ERROR
 
 
-### NEED TO POPULATE WITH FULL LIST OF STOCKS
-stock_list = ['cy', 'aapl', 'goog']
+    def collect_data(self, list_idx):
+        # Update DB with intraday stock data
+        self.insert_stock_data(self.stock_list[list_idx], 'IK798ICZ6BMU2EZM')
 
-def collect_data(list_idx):
-    print('collect_data()')
-    # Update DB with intraday stock data
-    insert_stock_data(stock_list[list_idx], 'IK798ICZ6BMU2EZM')
+        list_idx = list_idx + 1
+        # if there are still stocks to be scraped
+        if (list_idx != len(self.stock_list)):
+            # Seconds for timer; must be so that there are 5 or less calls per minute per AV key
+            # A little randomized in case AV doesn't like that automated scraping is taking place
+            secs = 12 + random.random() * 2
+            # Initialize timer
+            t = Timer(secs, self.collect_data, args=[list_idx])
+            t.start()
 
-    list_idx = list_idx + 1
-    # if there are still stocks to be scraped
-    if (list_idx != len(stock_list)):
-        # Seconds for timer; must be so that there are 5 or less calls per minute per AV key
-        # A little randomized in case AV doesn't like that automated scraping is taking place
-        secs = 12 + random.random() * 2
-        # Initialize timer
-        t = Timer(secs, collect_data, args=[list_idx])
+
+    # daily_timer:
+    """
+    * ISSUES:   - Time zones? (just bc it executes at the right time in Urbana, IL, doesn't mean it'll execute at the right time on a server in California)
+                X- Account for leap year
+                X- Time shifting between function calls? (might be off by a couple seconds between calls, but this will propagate over time, need a way to execute at the same time every day)
+                X- Daylight savings?
+    """
+    def daily_timer(self):
+        # set datetime of next daily_timer() execution
+        now = datetime.today()
+        delta_t = timedelta(days=1)
+        next_daily_timer = now + delta_t
+        next_daily_timer = next_daily_timer.replace(hour=17, minute=5, second=0, microsecond=0)   # reset next_daily_timer datetime to be exactly at 5:05pm
+        # set timer for next daily_timer() execution
+        now = datetime.today()
+        delta_t = next_daily_timer - now
+        secs = delta_t.seconds + 1
+        t = Timer(secs, self.daily_timer)
         t.start()
-
-
-# daily_timer:
-"""
-* ISSUES:   - Time zones? (just bc it executes at the right time in Urbana, IL, doesn't mean it'll execute at the right time on a server in California)
-            X- Account for leap year
-            X- Time shifting between function calls? (might be off by a couple seconds between calls, but this will propagate over time, need a way to execute at the same time every day)
-            X- Daylight savings?
-"""
-def daily_timer():
-    # set datetime of next daily_timer() execution
-    now = datetime.today()
-    delta_t = timedelta(days=1)
-    next_daily_timer = now + delta_t
-    next_daily_timer = next_daily_timer.replace(hour=17, minute=5, second=0, microsecond=0)   # reset next_daily_timer datetime to be exactly at 5:05pm
-    # set timer for next daily_timer() execution
-    now = datetime.today()
-    delta_t = next_daily_timer - now
-    secs = delta_t.seconds + 1
-    t = Timer(secs, daily_timer)
-    t.start()
-    # if today is a trading day, collect data
-    if (trading_day()):
-        last_update = date.today()
-        collect_data(0)
-
-
-# Initialize last_update
-last_update = date(1774, 7, 4)
-# Engage webscraper
-daily_timer()
+        # if today is a trading day, collect data
+        if (self.trading_day()):
+            self.last_update = date.today()
+            self.collect_data(0)

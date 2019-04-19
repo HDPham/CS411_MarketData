@@ -3,6 +3,7 @@ from us_treasury_scrap import web_scrap_treasury
 import json, datetime, atexit, time
 import pandas as pd, pandas.io.sql as psql
 import numpy as np
+from scraper import Scrape
 app = Flask(__name__, template_folder='templates')
 app.secret_key = '99qVu2YPjy5ss0Z66Igj'
 
@@ -70,6 +71,9 @@ db.create_all() #don't know if this works but let's try?
 db.session.commit()
 # class User(db.Model):
 #     id =
+
+# Begin webscraping
+Scrape()
 
 @app.route('/')
 @app.route('/login')
