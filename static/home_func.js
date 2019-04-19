@@ -22,7 +22,6 @@ function search() {
         prices.push(values[i][3]);
       }
       // package into a niiiiice data format
-      convert_to_csv(response, stock);
       var data = [
       {
         x: times,
@@ -143,22 +142,37 @@ function call_update(){
   });
 }
 // Inspiration and credit for code goes to Danny Pule on medium ; https://medium.com/@danny.pule/export-json-to-csv-file-using-javascript-a0b7bc5b00d2
-function convert_to_csv(response, stock){
-  var stock_data = JSON.stringify(response);
-  var csv_str = '';
-  for(var i=0; i< Object.entries(response).length; i++){
-    var row = '';
-    row += JSON.stringify(Object.entries(response)[i][0])+",";
-    for(var j=0; j <Object.entries(response)[i][1].length; j++){
-      row+=JSON.stringify(Object.entries(response)[i][1][j])+",";
+function convert_to_csv(){
+  var stock = document.getElementById("searchbox").value;
+  $.ajax({
+    // send data to scraping.py
+    url: '/get_stock',
+    type: 'GET',
+    data: {
+      stock: stock
+    },
+    dataType: "json",
+    success: function(response){
+      var stock_data = JSON.stringify(response);
+      var csv_str = '';
+      for(var i=Object.entries(response).length-1; i>= Object.entries(response).length-500; i--){
+        var row = '';
+        row += JSON.stringify(Object.entries(response)[i][0])+",";
+        for(var j=0; j <Object.entries(response)[i][1].length; j++){
+          row+=JSON.stringify(Object.entries(response)[i][1][j])+",";
+        }
+        csv_str += row + '\r\n';
+      }
+      var csv_title = stock + '.csv';
+      var obj = new Blob([csv_str], { type: 'text/csv;charset=utf-8;' });
+      var link = document.getElementById('downloadable');
+      var url = URL.createObjectURL(obj);
+      link.setAttribute("href", url);
+      link.setAttribute("download", csv_title);
+    },
+    error: function(response){
+      document.getElementById("stock_output").value = "Sorry, something went wrong in your search :/ Please make sure your stock symbol is valid";
+      document.getElementById('current_stock').value = null;
     }
-    console.log(row);
-    csv_str += row + '\r\n';
-  }
-  var csv_title = stock + '.csv';
-  var obj = new Blob([csv_str], { type: 'text/csv;charset=utf-8;' });
-  var link = document.getElementById('downloadable');
-  var url = URL.createObjectURL(obj);
-  link.setAttribute("href", url);
-  link.setAttribute("download", csv_title);
+  });
 }
