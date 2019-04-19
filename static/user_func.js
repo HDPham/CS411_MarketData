@@ -1,5 +1,4 @@
 $(document).ready(function (){
-  console.log('ready');
   call_get_user_info();
   $.ajax({
     url:'/get_user_stocks',
@@ -42,19 +41,25 @@ function call_get_user_info(){
 }
 
 function make_user_stock_table(response){
-  var result = response;
+  var result = JSON.parse(response);
   console.log(result);
   var table = document.getElementById('user_tracked_stocks');
   console.log(table.children[1]);
-  for(i in result) {
+  stock_number = 0;
+  for(key in result) {
+    console.log(key);
     var row = table.children[1].insertRow(-1);
+
     var cell1 = document.createElement('th');
     cell1.scope = "row";
-    cell1.innerHTML = 1 + parseInt(i);
+    cell1.innerHTML = ++stock_number;
     row.appendChild(cell1);
-    var cell2 = row.insertCell(-1);
-    cell2.innerHTML = result[i].toUpperCase();
 
+    var cell2 = row.insertCell(-1);
+    cell2.innerHTML = result[key][0].toUpperCase();
+
+    var cell3 = row.insertCell(-1);
+    cell3.innerHTML = result[key][1];
   }
   console.log(table);
 }

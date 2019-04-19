@@ -226,12 +226,12 @@ def get_user_info():
 def get_user_stocks():
     user = session.get('user')
     connection = db.engine.connect()
-    query = 'SELECT stock FROM users_tracking_stocks WHERE user = \''+user+'\';'
+    query = 'SELECT * FROM users_tracking_stocks WHERE user = \''+user+'\';'
     result = connection.execute(query)
-    user_list = []
+    user_dict = {}
     for row in result:
-        user_list.append(row[0])
-    return jsonify(user_list)
+        user_dict[row['stock']] = (row['stock'], row['number_of'])
+    return json.dumps(user_dict)
 
 @app.route('/update_user_info', methods=['POST'])
 def update_user_info():
