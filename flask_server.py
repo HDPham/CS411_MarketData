@@ -36,7 +36,7 @@ class User(db.Model):
     tracked_stocks = db.relationship('Stock', secondary=users_tracking_stocks, lazy='subquery',
                     backref=db.backref('users', lazy=True))
     def __repr__(self):
-        return '<User %r' %self.user
+        return '<User %r>' %self.user
 class Stock(db.Model):
     name = db.Column(db.String(5), primary_key=True)
     number_of = db.Column(db.Integer)
@@ -289,7 +289,6 @@ def most_popular():
     result = connection.execute(advanced_SQL, '{date} 16:00:00'.format(date=date_str))
     most_popular = {}
     for row in result:
-
         most_popular[row['stock']] = (row['count'], row['close'])
     return json.dumps(most_popular)
 
@@ -345,6 +344,7 @@ def update():
 def portfolio_calculator():
     now = datetime.datetime.now()
     date = datetime.date(now.year, now.month, now.day).strftime("%Y-%m-%d")
+    yesterday =datetime.date(now.year, now.month, now.day-1).strftime("%Y-%m-%d")
     year5_ago = datetime.date(now.year-5, now.month, now.day).strftime("%Y-%m-%d")
     year3_ago = datetime.date(now.year-3, now.month, now.day).strftime("%Y-%m-%d")
     year1_ago = datetime.date(now.year-1, now.month, now.day).strftime("%Y-%m-%d")
@@ -405,25 +405,36 @@ def portfolio_calculator():
     for i in means.index:
         # stock_pivot[i+'_return'] = stock_pivot[('open', i)].apply(lambda x: (x.shift(-1) - x) / x)
         stock_pivot[('return', i)] = (stock_pivot[('open', i)].shift(-1) - stock_pivot[('open', i)]) / stock_pivot[('open', i)]
-
     covariance = stock_pivot.cov()
-    risk_free_return = web_scrap_treasury()
-    print(risk_free_return)
+    risk_free_return = float(web_scrap_treasury()) / 100
+    market_return = float((stock_pivot.loc[date, ('open', 'SPY')] - stock_pivot.loc[year1_ago, ('open', 'SPY')]) / stock_pivot.loc[year1_ago, ('open', 'SPY')])
     for i in means.index:
+        print(i)
         if(i == 'SPY'):
             continue
         info_dict[i].append(covariance[('return', i)][('return', 'SPY')])
-        beta = info_dict[i][3] / covariance[('return', 'SPY')][('return', 'SPY')]
+        beta = float(info_dict[i][3] / covariance[('return', 'SPY')][('return', 'SPY')])
         info_dict[i].append(beta)
         # calculate alpha
-        print(stock_pivot.index.values)
-        print(pd.to_datetime(date))
-        realized_return = (stock_pivot.loc[date+"T00:00:00.000000000", ('open', i)] - stock_pivot.loc[year1_ago+"T00:00:00.000000000", ('open', i)]) / stock_pivot.loc[year1_ago+"T00:00:00.000000000", ('open', i)]
-        print(realized_return)
-
-
-
+        realized_return = float((stock_pivot.loc[date, ('open', i)] - stock_pivot.loc[year1_ago, ('open', i)]) / stock_pivot.loc[year1_ago, ('open', i)])
+        print(str(realized_return) + " - "+str(risk_free_return)+" - "+str(beta)+" * ("+str(market_return)+" - "+str(risk_free_return)+")")
+        alpha = realized_return - risk_free_return - beta*(market_return-risk_free_return)
+        print(alpha)
+        info_dict[i].append(alpha)
+    number_of = """
+    SELECT number_of, stock
+    FROM users_tracking_stocks
+    WHERE user='{user}'
+    """.format(user=user)
+    finding_portfolio_distributions = connection.execute(number_of)
+    total_dolla = 0
+    dolla = {}
+    for row in finding_portfolio_distributions:
+        dolla[row['stock']] = float(row['number_of']) * float(stock_pivot.loc[date, ('open', row['stock'])])
+        total_dolla += dolla[row['stock']]
+    print(total_dolla)
     return json.dumps(info_dict)
+
 @atexit.register
 def clean_up():
     session.clear()

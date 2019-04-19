@@ -18,7 +18,19 @@ function call_portfolio_calculator(){
     url:'/portfolio_calculator',
     type: 'GET',
     success: function(response){
-      document.getElementById('portfolio_results').innerHTML = "Stock: [Average daily return, price variance, std. dev. of price, covariance of stock with market, beta] "+ " " +response;
+      document.getElementById('portfolio_results').innerHTML = "Stock: [Average daily return, price variance, std. dev. of price, covariance of stock with market, beta, alpha] "+ " " +response;
+    },
+    error: function(response){
+      console.log('error');
+    }
+  });
+}
+function call_var_calculator(){
+  $.ajax({
+    url:'/var_calculator',
+    type: 'GET',
+    success: function(response){
+      document.getElementById('var_results').innerHTML = response;
     },
     error: function(response){
       console.log('error');
