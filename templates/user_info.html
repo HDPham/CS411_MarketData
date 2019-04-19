@@ -43,28 +43,47 @@
 
     <br />
 
-    <div class="container" style="width: 600px">
+    <div class="container">
+      
+      <div class="table-responsive mx-auto" style="width: 600px;">
+        <table id='user_info_table' class="table table-hover">
+          <tbody>
+            <tr>
+              <th scope="row">Username</td>
+              <td id='user_table_name'></td>
+            </tr>
+            <tr>
+              <th scope="row">Password</td>
+              <td id='user_table_password'></td>
+            </tr>
+          </tbody>
+        </table>
+      </div><br /><br />
 
-      <table id='user_info_table' class="table table-hover">
-        <tbody>
-          <tr>
-            <th scope="row">Username</td>
-            <td id='user_table_name'></td>
-          </tr>
-          <tr>
-            <th scope="row">Password</td>
-            <td id='user_table_password'></td>
-          </tr>
-        </tbody>
-      </table><br /><br />
-
-      <div class="table-responsive" style="max-height: 400px; overflow: auto;">
+      <div class="table-responsive mx-auto" style="width: 600px; max-height: 400px; overflow: auto;">
         <table id="user_tracked_stocks" class="table table-bordered table-hover">
           <thead>
             <tr>
               <th scope="col">#</th>
               <th scope="col">Stock</th>
               <th scope="col">Number Of</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div> <br /><br />
+
+      <div class="table-responsive mx-auto" style="width: 900px; max-height: 400px; overflow: auto;">
+        <table id="user_stock_portfolio" class="table table-bordered table-hover">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Stock</th>
+              <th scope="col">Average Return</th>
+              <th scope="col">Variance</th>
+              <th scope="col">Deviation</th>
+              <th scope="col">Beta</th>
+              <th scope="col">Alpha</th>
             </tr>
           </thead>
           <tbody></tbody>

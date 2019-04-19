@@ -10,6 +10,16 @@ $(document).ready(function (){
       console.log("Bwahaha Thomas, you have thwarted yourself once again");
     }
   });
+  $.ajax({
+    url:'/portfolio_calculator',
+    type: 'GET',
+    success: function(response){
+      make_user_portfolio_table(response);
+    },
+    error: function(response){
+      console.log("Bwahaha Thomas, you have thwarted yourself once again");
+    }
+  });
 })
 
 function call_portfolio_calculator(){
@@ -60,6 +70,42 @@ function make_user_stock_table(response){
 
     var cell3 = row.insertCell(-1);
     cell3.innerHTML = result[key][1];
+  }
+  console.log(table);
+}
+
+function make_user_portfolio_table(response){
+  var result = JSON.parse(response);
+  console.log(result);
+  var table = document.getElementById('user_stock_portfolio');
+  console.log(table.children[1]);
+  stock_number = 0;
+  for(key in result) {
+    console.log(key);
+    var row = table.children[1].insertRow(-1);
+
+    var cell1 = document.createElement('th');
+    cell1.scope = "row";
+    cell1.innerHTML = ++stock_number;
+    row.appendChild(cell1);
+
+    var cell2 = row.insertCell(-1);
+    cell2.innerHTML = key;
+
+    var cell3 = row.insertCell(-1);
+    cell3.innerHTML = result[key][0];
+
+    var cell4 = row.insertCell(-1);
+    cell4.innerHTML = result[key][1];
+
+    var cell5 = row.insertCell(-1);
+    cell5.innerHTML = result[key][2];
+
+    var cell6 = row.insertCell(-1);
+    cell6.innerHTML = result[key][3];
+
+    var cell7 = row.insertCell(-1);
+    cell7.innerHTML = result[key][4];
   }
   console.log(table);
 }

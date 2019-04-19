@@ -410,10 +410,10 @@ def portfolio_calculator():
     risk_free_return = web_scrap_treasury()
     print(risk_free_return)
     for i in means.index:
-        if(i == 'SPY'):
+        if(i == 'spy'):
             continue
-        info_dict[i].append(covariance[('return', i)][('return', 'SPY')])
-        beta = info_dict[i][3] / covariance[('return', 'SPY')][('return', 'SPY')]
+        info_dict[i].append(covariance[('return', i)][('return', 'spy')])
+        beta = info_dict[i][3] / covariance[('return', 'spy')][('return', 'spy')]
         info_dict[i].append(beta)
         # calculate alpha
         print(stock_pivot.index.values)
