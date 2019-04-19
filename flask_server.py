@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, render_template, request, Response, session
 from us_treasury_scrap import web_scrap_treasury
+# from numpy import linalg as la
 import json, datetime, atexit, time
 import pandas as pd, pandas.io.sql as psql
 import numpy as np
@@ -119,7 +120,7 @@ def check_user():
 
 
 #continous web scraping -- update at closing
-@app.route('/get_stock', methods=['GET', 'POST'])
+@app.route('/get_stock', methods=['GET'])
 def get_stock():
     #Get stock name and get SQLAlchemy database
     stock = request.args.get('stock')
@@ -226,12 +227,12 @@ def get_user_info():
 def get_user_stocks():
     user = session.get('user')
     connection = db.engine.connect()
-    query = 'SELECT stock FROM users_tracking_stocks WHERE user = \''+user+'\';'
+    query = 'SELECT * FROM users_tracking_stocks WHERE user = \''+user+'\';'
     result = connection.execute(query)
-    user_list = []
+    user_dict = {}
     for row in result:
-        user_list.append(row[0])
-    return jsonify(user_list)
+        user_dict[row['stock']] = (row['stock'], row['number_of'])
+    return json.dumps(user_dict)
 
 @app.route('/update_user_info', methods=['POST'])
 def update_user_info():
@@ -343,8 +344,8 @@ def update():
 @app.route('/portfolio_calculator', methods=['GET'])
 def portfolio_calculator():
     now = datetime.datetime.now()
-    date = datetime.date(now.year, now.month, now.day).strftime("%Y-%m-%d")
-    yesterday =datetime.date(now.year, now.month, now.day-1).strftime("%Y-%m-%d")
+    date = datetime.date(now.year, now.month, now.day-1).strftime("%Y-%m-%d")
+    yesterday =datetime.date(now.year, now.month, now.day-2).strftime("%Y-%m-%d")
     year5_ago = datetime.date(now.year-5, now.month, now.day).strftime("%Y-%m-%d")
     year3_ago = datetime.date(now.year-3, now.month, now.day).strftime("%Y-%m-%d")
     year1_ago = datetime.date(now.year-1, now.month, now.day).strftime("%Y-%m-%d")
@@ -355,7 +356,7 @@ def portfolio_calculator():
     sql_query = """
     SELECT t1.stock_name AS stock, AVG((t1.open_ - t2.open_)/t2.open_) AS average_return
     FROM daily as t1, daily as t2
-    WHERE (t1.day BETWEEN '{year5_ago}' AND '{today}') AND
+    WHERE (t1.day BETWEEN '{year1_ago}' AND '{today}') AND
      t1.stock_name = t2.stock_name AND datediff(t1.day, t2.day) = 1 AND
      t1.stock_name IN (
         SELECT stock
@@ -363,27 +364,28 @@ def portfolio_calculator():
         WHERE user = '{user}'
         )
     GROUP BY t1.stock_name;
-    """.format(user=user, year5_ago=year5_ago, today=date)
+    """.format(user=user, year1_ago=year1_ago, today=date)
     result = connection.execute(sql_query)
     for row in result:
         info_dict[row['stock']] = []
         info_dict[row['stock']].append(row['average_return'])
     #Then calculate the variance and standard deviation over the same period
     variance = """
-    SELECT d.stock_name as stock, VARIANCE(d.open_) as variance, STDDEV(d.open_) as deviation
+    SELECT d.stock_name as stock, AVG(d.open_) as average, VARIANCE(d.open_) as variance, STDDEV(d.open_) as deviation
     FROM daily as d
-    WHERE (d.day BETWEEN '{year5_ago}' AND '{today}') AND
+    WHERE (d.day BETWEEN '{year1_ago}' AND '{today}') AND
     d.stock_name IN (
        SELECT stock
        FROM users_tracking_stocks
        WHERE user = '{user}'
        )
     GROUP BY d.stock_name;
-     """.format(user=user, year5_ago=year5_ago, today=date)
+     """.format(user=user, year1_ago=year1_ago, today=date)
     var_result = connection.execute(variance)
     for row in var_result:
-        info_dict[row['stock']].append(row['variance'])
-        info_dict[row['stock']].append(row['deviation'])
+        info_dict[row['stock']].append(float(row['average']))
+        info_dict[row['stock']].append(float(row['variance']))
+        info_dict[row['stock']].append(float(row['deviation']))
 
     #Finding the covariance; SQL sucks to do stats, so converting query into pandas dataframe
     values = """
@@ -413,26 +415,45 @@ def portfolio_calculator():
         if(i == 'SPY'):
             continue
         info_dict[i].append(covariance[('return', i)][('return', 'SPY')])
-        beta = float(info_dict[i][3] / covariance[('return', 'SPY')][('return', 'SPY')])
+        beta = float(info_dict[i][4] / covariance[('return', 'SPY')][('return', 'SPY')])
         info_dict[i].append(beta)
         # calculate alpha
         realized_return = float((stock_pivot.loc[date, ('open', i)] - stock_pivot.loc[year1_ago, ('open', i)]) / stock_pivot.loc[year1_ago, ('open', i)])
-        print(str(realized_return) + " - "+str(risk_free_return)+" - "+str(beta)+" * ("+str(market_return)+" - "+str(risk_free_return)+")")
+        # print(str(realized_return) + " - "+str(risk_free_return)+" - "+str(beta)+" * ("+str(market_return)+" - "+str(risk_free_return)+")")
         alpha = realized_return - risk_free_return - beta*(market_return-risk_free_return)
-        print(alpha)
+        # print(alpha)
         info_dict[i].append(alpha)
+        print(info_dict[i])
     number_of = """
     SELECT number_of, stock
     FROM users_tracking_stocks
     WHERE user='{user}'
     """.format(user=user)
     finding_portfolio_distributions = connection.execute(number_of)
-    total_dolla = 0
-    dolla = {}
+    # portfolio_value = 0
+    # var = {}
+    # # each element in var: [# of shares, total dollar amount, z-score for 95% confidence interval]
+    # for row in finding_portfolio_distributions:
+    #     var[row['stock']] = []
+    #     var[row['stock']].append(row['stock'])
+    #     var[row['stock']].append(float(row['number_of']) * float(stock_pivot.loc[date, ('open', row['stock'])]))
+    #     # Using a standard normal table, I found the z value for 95% confidence is 1.96, which my stats major friend says is the standard
+    #     z_score = info_dict[row['stock']][0] + 1.96*info_dict[row['stock']][1]
+    #     var[row['stock']].append(z_score)
+    #     portfolio_value += var[row['stock']][1]
+    # eigvalues, eigvectors = la.eig(covariance)
+    # print(eigvalues)
+    # print(portfolio_value)
     for row in finding_portfolio_distributions:
-        dolla[row['stock']] = float(row['number_of']) * float(stock_pivot.loc[date, ('open', row['stock'])])
-        total_dolla += dolla[row['stock']]
-    print(total_dolla)
+        stock = row['stock']
+        number_of = int(row['number_of'])
+        price = float(stock_pivot.loc[date, ('open', row['stock'])])
+        value = number_of * price
+        realized_return = float((stock_pivot.loc[date, ('open', stock)] - stock_pivot.loc[year1_ago, ('open', stock)]) / stock_pivot.loc[year1_ago, ('open', stock)])
+        print(realized_return)
+        individual_var = abs(((realized_return*price )- (1.96 * info_dict[stock][3])) * number_of)
+        print(individual_var)
+        info_dict[stock].append(individual_var)
     return json.dumps(info_dict)
 
 @atexit.register

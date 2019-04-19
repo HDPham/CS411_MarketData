@@ -43,28 +43,50 @@
 
     <br />
 
-    <div class="container" style="width: 600px">
+    <div class="container">
 
-      <table id='user_info_table' class="table table-hover">
-        <tbody>
-          <tr>
-            <th scope="row">Username</td>
-            <td id='user_table_name'></td>
-          </tr>
-          <tr>
-            <th scope="row">Password</td>
-            <td id='user_table_password'></td>
-          </tr>
-        </tbody>
-      </table><br /><br />
+      <div class="table-responsive mx-auto" style="width: 600px;">
+        <table id='user_info_table' class="table table-hover">
+          <tbody>
+            <tr>
+              <th scope="row">Username</td>
+              <td id='user_table_name'></td>
+            </tr>
+            <tr>
+              <th scope="row">Password</td>
+              <td id='user_table_password'></td>
+            </tr>
+          </tbody>
+        </table>
+      </div><br /><br />
 
-      <div class="table-responsive" style="max-height: 400px; overflow: auto;">
+      <div class="table-responsive mx-auto" style="width: 600px; max-height: 400px; overflow: auto;">
         <table id="user_tracked_stocks" class="table table-bordered table-hover">
           <thead>
             <tr>
               <th scope="col">#</th>
               <th scope="col">Stock</th>
-              <!-- <th scope="col">Number Of</th> -->
+              <th scope="col">Number Of</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div> <br /><br />
+
+      <div class="table-responsive mx-auto" style="width: 900px; max-height: 400px; overflow: auto;">
+        <table id="user_stock_portfolio" class="table table-bordered table-hover">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Stock</th>
+              <th scope="col">Daily Average Return</th>
+              <th scope='col'>Yearly Average</th>
+              <th scope="col">Variance</th>
+              <th scope="col">Deviation</th>
+              <th scope='col'>Covariance</th>
+              <th scope="col">Beta</th>
+              <th scope="col">Alpha</th>
+              <th scope='col'>Value at Risk</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -75,17 +97,6 @@
         <input id='new_password' type='text' placeholder="Password" /><br />
         <input id='confirm_password' type='text' placeholder='Confirm Password' /><br />
         <button id='user_btn' onclick='call_update_user_info()'>Change Password</button><br />
-      </div>
-
-      <div>
-        <button id='portfoliobtn' onclick='call_portfolio_calculator()'>Analysis Portfolio</button>
-        <button id='varbtn' onclick='call_var_calculator()'>Calculate Value at Risk</button>
-      </div>
-      <div id='portfolio_results'>
-
-      </div>
-      <div id='var_results'>
-        
       </div>
     </div>
 
