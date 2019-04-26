@@ -73,7 +73,7 @@ db.session.commit()
 #     id =
 
 # Begin webscraping
-Scrape()
+sss = Scrape()
 
 @app.route('/')
 @app.route('/login')
@@ -152,6 +152,11 @@ def get_stock():
         raise Exception("Failed to retrieve data from alpha_vantage")
     #Create a new table
     new_table = Stock(name=stock)
+
+    #if (stock not in sss.stock_list):
+    #    sss.stock_list.append(stock)
+    #    sss.collect_data(len(sss.stock_list)-1)
+
     # The only thing we might have to adjust is inserting into the database
     for key in data.keys():
         time = Time(datetime=key, open_=data[key]['1. open'], high=data[key]['2. high'], low=data[key]['3. low'], close=data[key]['4. close'], volume=data[key]['5. volume'])

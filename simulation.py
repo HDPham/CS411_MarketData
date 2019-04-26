@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd, pandas.io.sql as psql
 import json, datetime, atexit, time
 
-""" DUMM accounts that keep track of money and shares during algorithm DUMMs """
+""" Simulation accounts that keep track of money and shares during investment algorithm simulations """
 class SimAccount:
 
     def __init__(self, money0, shares0):
@@ -57,6 +57,13 @@ class SimAccount:
 """ Average Crossover Investment Algorithm """
 class AverageCrossover:
 
+    """
+    INITIALIZE AVERAGE CROSSOVER INVESTMENT SIMULATION
+    INPUTS:
+        price_data:         price data to run simulation on
+        length_long_avg:    number of days for long average
+        length_short_avg:   number of days for short average
+    """
     def __init__(self, price_data, length_long_avg, length_short_avg):
         # initialize simulation account
         self.account = SimAccount(price_data[0]*1000, 1000)
@@ -68,8 +75,10 @@ class AverageCrossover:
         # starting point of iterations
         self.start_idx = length_long_avg
         # long and short moving averages
-        self.long_avg = price_data[self.lavg_idx0:length_long_avg].mean()
-        self.short_avg = price_data[self.savg_idx0:length_long_avg].mean()
+        #self.long_avg = price_data[self.lavg_idx0:length_long_avg].mean()
+        #self.short_avg = price_data[self.savg_idx0:length_long_avg].mean()
+        self.long_avg = sum(price_data[self.lavg_idx0:length_long_avg]) / len(price_data[self.lavg_idx0:length_long_avg])
+        self.short_avg = sum(price_data[self.savg_idx0:length_long_avg]) / len(price_data[self.savg_idx0:length_long_avg])
         # crossover boolean
         if (self.short_avg > self.long_avg):
             self.short_above_long = True
@@ -83,8 +92,8 @@ class AverageCrossover:
             self.lavg_idx0 = self.lavg_idx0 + 1
             self.savg_idx0 = self.savg_idx0 + 1
             # update moving averages
-            long_avg = self.price_data[self.lavg_idx0:curr_idx+1].mean()
-            short_avg = self.price_data[self.savg_idx0:curr_idx+1].mean()
+            long_avg = sum(self.price_data[self.lavg_idx0:curr_idx+1]) / len(self.price_data[self.lavg_idx0:curr_idx+1])
+            short_avg = sum(self.price_data[self.savg_idx0:curr_idx+1]) / len(self.price_data[self.savg_idx0:curr_idx+1])
 
             # short m.avg has crossed below long m.avg, execute buy
             if (self.short_above_long and short_avg < long_avg):
@@ -100,22 +109,31 @@ class AverageCrossover:
 
         return self.account
 
-
+""" DUMM Investment Algorithm (discretized) """
 class DUMM:
 
+    # number of discrete steps between high_price and 0
     num_incs0 = 100
-
+    """
+    INITIALIZE DUMM INVESTMENT SIMULATION
+    INPUTS:
+        price_data: price data to run simulation on
+        bti:        buffer to increment ratio
+        gf:         growth function type
+                        e: exponential
+                        q: quadratic
+        qpow:       quadratic power used in quadratic growth functions
+        gratio:     growth ratio
+    """
     def __init__(self, price_data, bti=2, gf='e', qpow=0, gratio=1):
         # initialize DUMM account
         self.account = SimAccount(price_data[0]*1000, 1000)
         self.price_data = price_data
 
         self.num_incs0 = DUMM.num_incs0
-        # needs to be at least 1
-        self.bti = bti
+        self.bti = bti                                      # must be at least 1
         self.inc_size = 0
         self.buf_size = 0
-
         self.num_incs = self.num_incs0 - self.bti
 
         self.g_func = GrowthFunction(gf, qpow)
@@ -127,14 +145,12 @@ class DUMM:
         Phase.last_price = 0
         Phase.dumm = self
 
-
     # computes inc_size, buf_size, sets last_price
     # high_price is the highest price, it determines inc_size of the cycle
     def pre_cycle(self, high_price):
         self.inc_size = high_price / self.num_incs0
         self.buf_size = self.inc_size * self.bti
         Phase.last_price = self.inc_size * self.num_incs
-
 
     def run_sim(self):
 
@@ -169,11 +185,12 @@ class DUMM:
                     while(curr_price <= (Phase.last_price - self.inc_size)):
                         Phase.trade(idx)
 
-        print("Money = " + str(self.account.money))
-        print("Shares = " + str(self.account.shares))
-        print("Total Value = " + str(self.account.money + (self.account.shares * self.price_data[len(self.price_data)-1])))
+        #print("Money = " + str(self.account.money))
+        #print("Shares = " + str(self.account.shares))
+        #print("Total Value = " + str(self.account.money + (self.account.shares * self.price_data[len(self.price_data)-1])))
 
         return self.account
+
 
 """ DUMM helper class """
 class Phase:

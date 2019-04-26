@@ -73,7 +73,6 @@ class Holidays:
 class Scrape:
 
     def __init__(self):
-        print("Webscraper Online")
         app = Flask(__name__, template_folder='templates')
         app.secret_key = '99qVu2YPjy5ss0Z66Igj'
 
@@ -103,7 +102,7 @@ class Scrape:
     def go(self):
         # Engage webscraper
         self.daily_timer()
-        self.collect_data(0)
+
 
     # Outputs True or False based on whether the markets are open on the current day
     def trading_day(self):
@@ -161,15 +160,16 @@ class Scrape:
 
 
     def collect_data(self, list_idx):
+        print('collect_data()')
         # Update DB with intraday stock data
         self.insert_stock_data(self.stock_list[list_idx], 'IK798ICZ6BMU2EZM')
-
+        print(self.stock_list[list_idx])
         list_idx = list_idx + 1
         # if there are still stocks to be scraped
         if (list_idx != len(self.stock_list)):
             # Seconds for timer; must be so that there are 5 or less calls per minute per AV key
-            # A little randomized in case AV doesn't like that automated scraping is taking place
-            secs = 12 + random.random() * 2
+            # Randomize timing a touch
+            secs = 15 + random.random() * 2
             # Initialize timer
             t = Timer(secs, self.collect_data, args=[list_idx])
             t.start()
