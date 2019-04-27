@@ -83,40 +83,45 @@ def home ():
     user = user.capitalize()
     return render_template('/home.html', **locals())
 
-@app.route('/create_user')
-def create_user():
-    return render_template('/create_user.html')
+@app.route('/register')
+def register():
+    return render_template('/register.html')
 
 @app.route('/user_info')
 def user_info():
     return render_template('/user_info.html', **locals())
 
+
+
 @app.route('/insert_user', methods=['POST'])
 def insert_user_to_table():
-    user = request.form.get('user')
+    username = request.form.get('username')
     password = request.form.get('password')
     connection = db.engine.connect()
-    result = connection.execute("INSERT INTO user(user, password) " + "VALUES ( \"" + user +"\", \""+password+"\");" )
+    user_exist = connection.execute("SELECT * FROM user WHERE user = \"" + username + "\";").first()
+    if(user_exist):
+         connection.close()
+         return json.dumps({'duplicate':True})
+    connection.execute("INSERT INTO user(user, password) " + "VALUES ( \"" + username +"\", \""+password+"\");" )
     connection.close()
+    session['user'] = username
+    return json.dumps({'duplicate':False})
+
+@app.route('/check_user', methods=['POST'])
+def check_user():
+    username = request.form.get('username')
+    password = request.form.get('password')
+    engine = db.engine
+    user_exist = engine.execute("SELECT * FROM user WHERE user= \""+username+"\" AND password = \""+password+"\";").first()
+    if(user_exist):
+        return json.dumps({'info':True})
+    return json.dumps({'info':False})
+
+@app.route('/user_session', methods=['GET'])
+def user_sesssion():
+    user = request.args.get('username')
     session['user'] = user
     return Response(None)
-
-
-@app.route('/check_user', methods=['GET'])
-def check_user():
-    user = request.args.get('user')
-    password = request.args.get('password')
-    engine = db.engine
-    user_exist = engine.execute("SELECT * FROM user WHERE user= \""+user+"\" AND password = \""+password+"\";").first()
-    if(user_exist is None):
-        invalid_user = {}
-        invalid_user['exists'] = False
-        return json.dumps(invalid_user)
-    valid_user = {}
-    valid_user['exists'] = True
-    valid_user['user'] = user
-    session['user'] = user
-    return json.dumps(valid_user)
 
 
 #continous web scraping -- update at closing

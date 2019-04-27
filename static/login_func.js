@@ -1,51 +1,56 @@
-function user_search(){
-  var user = document.getElementById('user_name').value;
-  var password = document.getElementById('password').value;
-  $.ajax({
-    url:'/check_user',
-    type: 'GET',
-    data: {
-      user: user,
-      password: password
-    },
-    dataType: 'json',
-    success: function(response){
-      entries = Object.entries(response);
-      console.log(entries[0][1]);
-      if(entries[0][1] == false){
-        document.getElementById('error_msg').value = 'Sorry, your username or password was invalid';
-        return;
+$(document).ready(function() {
+  $('#login_form').submit(function(e) {
+    e.preventDefault();
+    $.ajax({
+      url:'/check_user',
+      type: 'POST',
+      data: {
+        username:$('#username').val(),
+        password:$('#password').val()
+      },
+      dataType:'json',
+      success: function(response) {
+        console.log(response)
+        if(response['info'] == true) { // if the login info is correct
+          $.ajax({
+            url:'/user_session',
+            type: 'GET',
+            data: {
+              username:$('#username').val()
+            },
+            success: function(response) {
+              window.location.href = '/home';
+            },
+            error: function(response) {
+              document.getElementById('error_msg').value = 'Sorry, something went wrong in processing your request';
+            }
+          });
+        }
+        else // if the login info is incorret
+          document.getElementById('error_msg').value = 'Sorry, your username or password was invalid';
+      },
+      error: function(response) {
+        document.getElementById('error_msg').value = 'Sorry, something went wrong in processing your request'
       }
-      window.location.href = '/home';
-    },
-    error: function(response){
-      console.log('error');
-      document.getElementById('error_msg').value = 'Sorry, something went wrong in processing your request'
-    }
+    });
   });
-}
-function set_user_for_home(){
-  user = 'guest';
-  password = '';
-  $.ajax({
-    url:'/check_user',
-    type: 'GET',
-    data: {
-      user: user,
-      password: password
-    },
-    dataType: 'json',
-    success: function(response){
-      entries = Object.entries(response);
-      console.log(entries[0][1]);
-      if(entries[0][1] == false){
-        document.getElementById('error_msg').value = 'Sorry, your username or password was invalid';
+
+  $('#guest_btn').click(function() {
+    $.ajax({
+      url:'/user_session',
+      type:'GET',
+      data: {
+        username:'Guest'
+      },
+      success: function(response) {
+        console.log(response)
+        window.location.href = '/home';
+      },
+      error: function(response) {
+        console.log(response)
+        document.getElementById('error_msg').value = 'Sorry, something went wrong in processing your request';
       }
-      window.location.href = '/home';
-    },
-    error: function(response){
-      console.log('error');
-      document.getElementById('error_msg').value = 'Sorry, something went wrong in processing your request'
-    }
+    });
   });
-}
+
+});
