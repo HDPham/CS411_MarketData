@@ -3,11 +3,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd, pandas.io.sql as psql
 import json, datetime, atexit, time
+import statistics as stats
 
 """ Simulation accounts that keep track of money and shares during investment algorithm simulations """
 class SimAccount:
 
-    def __init__(self, money0, shares0):
+    def __init__(self, price_data, money0, shares0):
+        self.commission_fee = 0
+        self.price_data = price_data
         self.money = money0
         self.shares = shares0
         # buy and sell trackers
@@ -28,7 +31,7 @@ class SimAccount:
         # prevents account money from going negative
         if (self.money >= trade_money):
             # update money and shares
-            self.money = self.money - trade_money
+            self.money = self.money - trade_money - self.commission_fee
             self.shares = self.shares + num_shares
             # track trade
             self.buy_prices.append(price)
@@ -41,7 +44,7 @@ class SimAccount:
         if (self.shares >= num_shares):
             # update money and shares
             trade_money = price * num_shares
-            self.money = self.money + trade_money
+            self.money = self.money + trade_money - self.commission_fee
             self.shares = self.shares - num_shares
             # track trade
             self.sell_prices.append(price)
@@ -57,17 +60,9 @@ class SimAccount:
 """ Average Crossover Investment Algorithm """
 class AverageCrossover:
 
-    """
-    INITIALIZE AVERAGE CROSSOVER INVESTMENT SIMULATION
-    INPUTS:
-        price_data:         price data to run simulation on
-        length_long_avg:    number of days for long average
-        length_short_avg:   number of days for short average
-    """
     def __init__(self, price_data, length_long_avg, length_short_avg):
         # initialize simulation account
-        self.account = SimAccount(price_data[0]*1000, 1000)
-        self.price_data = price_data
+        self.account = SimAccount(price_data, price_data[0]*1000, 0)
         # start point index of long average
         self.lavg_idx0 = 0
         # start point index of short average
@@ -75,10 +70,8 @@ class AverageCrossover:
         # starting point of iterations
         self.start_idx = length_long_avg
         # long and short moving averages
-        #self.long_avg = price_data[self.lavg_idx0:length_long_avg].mean()
-        #self.short_avg = price_data[self.savg_idx0:length_long_avg].mean()
-        self.long_avg = sum(price_data[self.lavg_idx0:length_long_avg]) / len(price_data[self.lavg_idx0:length_long_avg])
-        self.short_avg = sum(price_data[self.savg_idx0:length_long_avg]) / len(price_data[self.savg_idx0:length_long_avg])
+        self.long_avg = stats.mean(price_data[self.lavg_idx0:length_long_avg])
+        self.short_avg = stats.mean(price_data[self.savg_idx0:length_long_avg])
         # crossover boolean
         if (self.short_avg > self.long_avg):
             self.short_above_long = True
@@ -87,63 +80,55 @@ class AverageCrossover:
 
     def run_sim(self):
 
-        for curr_idx in range(self.start_idx, len(self.price_data)):
+        for curr_idx in range(self.start_idx, len(self.account.price_data)):
             # update start point indices
             self.lavg_idx0 = self.lavg_idx0 + 1
             self.savg_idx0 = self.savg_idx0 + 1
             # update moving averages
-            long_avg = sum(self.price_data[self.lavg_idx0:curr_idx+1]) / len(self.price_data[self.lavg_idx0:curr_idx+1])
-            short_avg = sum(self.price_data[self.savg_idx0:curr_idx+1]) / len(self.price_data[self.savg_idx0:curr_idx+1])
+            long_avg = stats.mean(self.account.price_data[self.lavg_idx0:curr_idx+1])
+            short_avg = stats.mean(self.account.price_data[self.savg_idx0:curr_idx+1])
 
             # short m.avg has crossed below long m.avg, execute buy
             if (self.short_above_long and short_avg < long_avg):
                 self.short_above_long = False
-                self.account.exec_buy(self.price_data[curr_idx], 10, curr_idx)
+                self.account.exec_buy(self.account.price_data[curr_idx], 100, curr_idx)
             # short m.avg has crossed above long m.avg, execute sell
             elif (not self.short_above_long and short_avg > long_avg):
                 self.short_above_long = True
-                self.account.exec_sell(self.price_data[curr_idx], 10, curr_idx)
+                self.account.exec_sell(self.account.price_data[curr_idx], 100, curr_idx)
 
             # track total value of self.account
-            self.account.track_value(self.price_data[curr_idx], curr_idx)
+            self.account.track_value(self.account.price_data[curr_idx], curr_idx)
 
         return self.account
 
-""" DUMM Investment Algorithm (discretized) """
+# DIVIDE BY ZERO ERROR
+""" DUMM Investment Algorithm """
 class DUMM:
 
-    # number of discrete steps between high_price and 0
     num_incs0 = 100
-    """
-    INITIALIZE DUMM INVESTMENT SIMULATION
-    INPUTS:
-        price_data: price data to run simulation on
-        bti:        buffer to increment ratio
-        gf:         growth function type
-                        e: exponential
-                        q: quadratic
-        qpow:       quadratic power used in quadratic growth functions
-        gratio:     growth ratio
-    """
+
     def __init__(self, price_data, bti=2, gf='e', qpow=0, gratio=1):
         # initialize DUMM account
-        self.account = SimAccount(price_data[0]*1000, 1000)
-        self.price_data = price_data
+        self.account = SimAccount(price_data, price_data[0]*1000, 0)
 
         self.num_incs0 = DUMM.num_incs0
-        self.bti = bti                                      # must be at least 1
+        # needs to be at least 1
+        self.bti = bti
         self.inc_size = 0
         self.buf_size = 0
-        self.num_incs = self.num_incs0 - self.bti
 
+        self.num_incs = self.num_incs0 - self.bti
         self.g_func = GrowthFunction(gf, qpow)
         self.gratio = gratio
 
         self.high_price = 0
         # cycle reset in the Phase class
         Phase.phase_type = "start"
+        Phase.curr_phase = None
         Phase.last_price = 0
         Phase.dumm = self
+
 
     # computes inc_size, buf_size, sets last_price
     # high_price is the highest price, it determines inc_size of the cycle
@@ -152,10 +137,11 @@ class DUMM:
         self.buf_size = self.inc_size * self.bti
         Phase.last_price = self.inc_size * self.num_incs
 
+
     def run_sim(self):
 
-        for idx in range(0,len(self.price_data)):
-            curr_price = self.price_data[idx]
+        for idx in range(0,len(self.account.price_data)):
+            curr_price = self.account.price_data[idx]
             self.account.track_value(curr_price, idx)
 
             if (Phase.phase_type == "buy"):
@@ -187,10 +173,9 @@ class DUMM:
 
         #print("Money = " + str(self.account.money))
         #print("Shares = " + str(self.account.shares))
-        #print("Total Value = " + str(self.account.money + (self.account.shares * self.price_data[len(self.price_data)-1])))
+        #print("Total Value = " + str(self.account.money + (self.account.shares * self.account.price_data[len(self.account.price_data)-1])))
 
         return self.account
-
 
 """ DUMM helper class """
 class Phase:
@@ -210,7 +195,6 @@ class Phase:
     def initialize_size_arr(cls):
 
         length = cls.dumm.num_incs + 1
-
         cls.size_arr = np.array([0.0] * length)
 
         x_0 = cls.dumm.g_func.inv(1.0)
@@ -253,6 +237,10 @@ class Phase:
         else:
             self.money_size_arr = Phase.size_arr[0:self.prev_phase.idx]
         self.compute_price_arr()
+        """
+        if 0 in self.price_arr:
+            print(self.price_arr)
+        """
         self.shares_size_arr = self.money_size_arr /  self.price_arr
         return
 

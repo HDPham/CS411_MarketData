@@ -73,7 +73,7 @@ db.session.commit()
 #     id =
 
 # Begin webscraping
-sss = Scrape()
+#sss = Scrape(db)
 
 @app.route('/')
 @app.route('/login')

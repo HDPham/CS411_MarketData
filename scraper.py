@@ -72,24 +72,7 @@ class Holidays:
 
 class Scrape:
 
-    def __init__(self):
-        app = Flask(__name__, template_folder='templates')
-        app.secret_key = '99qVu2YPjy5ss0Z66Igj'
-
-        #Note: On the actual webserver, will need to CREATE USER with full privileges
-        # After creating the user, then create database
-        app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://cs411proj:Password_123@localhost/stock_data" #change to mySQL later
-        ##### NOT SURE IF I NEED THIS #####
-        #####app.config["SQLALCHEMY_POOL_RECYCLE"] = 299
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        db = SQLAlchemy(app)
-
-        ##### NOT SURE IF I NEED THESE #####
-        #####metadata = db.metadata
-
-        #####Session = db.create_session(options={'bind':'dest_db_con'})
-        #####sql_session = Session()
-
+    def __init__(self, db):
         # connection variable provides bridge between Python and SQL
         self.connection = db.engine.connect()
 
