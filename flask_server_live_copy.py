@@ -1,10 +1,10 @@
-from flask import Flask, jsonify, render_template, request, Response, session
+from flask import Flask, render_template, request, Response, session
 from us_treasury_scrap import web_scrap_treasury
 # from numpy import linalg as la
 import json, datetime, atexit, time
 import pandas as pd, pandas.io.sql as psql
 import numpy as np
-from scraper import Scrape
+# from scraper import Scrape
 app = Flask(__name__, template_folder='templates')
 app.secret_key = '99qVu2YPjy5ss0Z66Igj'
 
@@ -14,9 +14,14 @@ from flask_sqlalchemy import SQLAlchemy
 from alpha_vantage.timeseries import TimeSeries     #If something goes wrong with stock data stuff, it's here
 
 
-#Note: On the actual webserver, will need to CREATE USER with full privileges
 # After creating the user, then create database
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://cs411proj:Password_123@localhost/stock_data" #change to mySQL later
+SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://{username}:{password}@{hostname}/{databasename}".format(
+    username="cs411proj",
+    password="Password_123",
+    hostname="cs411proj.mysql.pythonanywhere-services.com",
+    databasename="cs411proj$stock_data"
+)
+app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
 app.config["SQLALCHEMY_POOL_RECYCLE"] = 299
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -87,9 +92,9 @@ def home ():
     user = user.capitalize()
     return render_template('/home.html', **locals())
 
-@app.route('/create_user')
+@app.route('/register')
 def create_user():
-    return render_template('/create_user.html')
+    return render_template('/register.html')
 
 @app.route('/user_info')
 def user_info():
@@ -97,30 +102,33 @@ def user_info():
 
 @app.route('/insert_user', methods=['POST'])
 def insert_user_to_table():
-    user = request.form.get('user')
+    username = request.form.get('username')
     password = request.form.get('password')
     connection = db.engine.connect()
-    result = connection.execute("INSERT INTO user(user, password) " + "VALUES ( \"" + user +"\", \""+password+"\");" )
+    user_exist = connection.execute("SELECT * FROM user WHERE user = \"" + username + "\";").first()
+    if(user_exist):
+         connection.close()
+         return json.dumps({'duplicate':True})
+    connection.execute("INSERT INTO user(user, password) " + "VALUES ( \"" + username +"\", \""+password+"\");" )
     connection.close()
+    session['user'] = username
+    return json.dumps({'duplicate':False})
+
+@app.route('/check_user', methods=['POST'])
+def check_user():
+    username = request.form.get('username')
+    password = request.form.get('password')
+    engine = db.engine
+    user_exist = engine.execute("SELECT * FROM user WHERE user= \""+username+"\" AND password = \""+password+"\";").first()
+    if(user_exist):
+        return json.dumps({'info':True})
+    return json.dumps({'info':False})
+
+@app.route('/user_session', methods=['GET'])
+def user_sesssion():
+    user = request.args.get('username')
     session['user'] = user
     return Response(None)
-
-
-@app.route('/check_user', methods=['GET'])
-def check_user():
-    user = request.args.get('user')
-    password = request.args.get('password')
-    engine = db.engine
-    user_exist = engine.execute("SELECT * FROM user WHERE user= \""+user+"\" AND password = \""+password+"\";").first()
-    if(user_exist is None):
-        invalid_user = {}
-        invalid_user['exists'] = False
-        return json.dumps(invalid_user)
-    valid_user = {}
-    valid_user['exists'] = True
-    valid_user['user'] = user
-    session['user'] = user
-    return json.dumps(valid_user)
 
 
 #continous web scraping -- update at closing
@@ -151,6 +159,7 @@ def get_stock():
         data, meta_data = ts.get_intraday(symbol=stock,interval='1min', outputsize='full')
         day_data, day_meta_data = ts.get_daily(symbol=stock, outputsize='full')
     except:
+        connection.close()
         raise Exception("Failed to retrieve data from alpha_vantage")
     #Create a new table
     new_table = Stock(name=stock)
@@ -195,6 +204,7 @@ def add_stock():
         for row in result:  #guaranteed to be only one result; TRICKESY BAGGINS LOOP @ Golem
             tot = tot + int(row['number_of'])
         if (tot <= 0):
+            connection.close()
             return Response(None)
         raw_SQL = "UPDATE users_tracking_stocks SET number_of = \'"+str(tot)+'\' WHERE user = \'' + user + '\' AND stock=\"'+stock+'\";'
         result = connection.execute(raw_SQL)
@@ -214,6 +224,7 @@ def remove_stock():
     print('reached 2')
     values = connection.execute('SELECT * FROM users_tracking_stocks WHERE user = \'' + user + '\' AND stock=\"'+stock+'\";').first()
     if(values is None):
+        connection.close()
         return Response(None)
     print('reached')
     raw_SQL = 'DELETE FROM users_tracking_stocks WHERE user = \'' + user + '\' AND stock=\"'+stock+'\";'
@@ -231,6 +242,7 @@ def get_user_info():
     for row in result:      #guaranteed to only be one since users are unique
         user_dict['user'] = row['user']
         user_dict['password'] = row['password']
+    connection.close()
     return json.dumps(user_dict)
 
 @app.route('/get_user_stocks', methods=['GET'])
@@ -242,6 +254,7 @@ def get_user_stocks():
     user_dict = {}
     for row in result:
         user_dict[row['stock']] = (row['stock'], row['number_of'])
+    connection.close()
     return json.dumps(user_dict)
 
 @app.route('/update_user_info', methods=['POST'])
@@ -251,6 +264,7 @@ def update_user_info():
     connection = db.engine.connect()
     query = 'UPDATE user SET password = \''+password+'\' WHERE user = \''+user+'\';'
     result = connection.execute(query)
+    connection.close()
     return Response(None)
 
 @app.route('/find_volatility', methods=['GET', 'POST'])
@@ -275,7 +289,9 @@ def find_volatility():
     for row in result:
         print(row)
         avg_price[row['stock']] = row['average']
+    connection.close()
     return json.dumps(avg_price)
+
 # This will be the automated webscrapper that updates stock info daily (during low use hours (2 AM?))
 @app.route('/most_popular', methods=['GET'])
 def most_popular():
@@ -301,6 +317,7 @@ def most_popular():
     most_popular = {}
     for row in result:
         most_popular[row['stock']] = (row['count'], row['close'])
+    connection.close()
     return json.dumps(most_popular)
 
 @app.route('/update', methods=['POST'])
