@@ -176,3 +176,22 @@ function convert_to_csv(){
     }
   });
 }
+
+function simulation() {
+  $.ajax({
+    url: '/get_stock',
+    type: 'GET',
+    data: {
+      stock: $('#searchbox').val(),
+      input1: $('#input1').val(),
+      input2: $('#input2').val()
+    },
+    dataType: "json",
+    success: function(response) {
+
+    },
+    error: function(response) {
+      document.getElementById("error_msg").value = "Sorry, something went wrong";
+    }
+  });
+}

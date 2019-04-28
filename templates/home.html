@@ -79,7 +79,6 @@
 
       <br />
 
-      <h3 id="compare_stocks_header" class="text-center">Advanced</h3>
       <div class="d-flex justify-content-center">
 
         <select id='month'>
@@ -167,6 +166,30 @@
       <br />
 
       <div id="stockGraph"></div>
+
+      <br />
+
+      <div class="mx-auto" style="width: 200px;">
+        <form>
+          <div class="form-group input-group">
+            <input id="input1" class="form-control" type="text" />
+          </div>
+          <div class="form-group input-group">
+            <input id="input2" class="form-control" type="text" />
+          </div>
+          <div class="form-group">
+            <button id="simulate_btn" class="btn-block" type="submit" onclick="simulation()">Generate</button>
+          </div>
+        </form>
+      </div>
+
+      <br />
+
+      <div class="text-center">
+        <div id="simulation_result"></div>
+        <textarea id="error_msg" placeholder="Displays Error Message"></textarea>
+      </div>
+
     </div>
     <!-- <div id='user_hold' >{{user|safe}}</div> -->
     <div id='current_stock' style='display: none'></div>

@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template, request, Response, session
+from flask import Flask, render_template, request, Response, session
 from us_treasury_scrap import web_scrap_treasury
 # from numpy import linalg as la
 import json, datetime, atexit, time
@@ -151,6 +151,7 @@ def get_stock():
         data, meta_data = ts.get_intraday(symbol=stock,interval='1min', outputsize='full')
         day_data, day_meta_data = ts.get_daily(symbol=stock, outputsize='full')
     except:
+        connection.close()
         raise Exception("Failed to retrieve data from alpha_vantage")
     #Create a new table
     new_table = Stock(name=stock)
@@ -209,6 +210,7 @@ def remove_stock():
     print('reached 2')
     values = connection.execute('SELECT * FROM users_tracking_stocks WHERE user = \'' + user + '\' AND stock=\"'+stock+'\";').first()
     if(values is None):
+        connection.close()
         return Response(None)
     print('reached')
     raw_SQL = 'DELETE FROM users_tracking_stocks WHERE user = \'' + user + '\' AND stock=\"'+stock+'\";'
