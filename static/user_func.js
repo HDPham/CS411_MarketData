@@ -87,6 +87,7 @@ function make_user_stock_table(response){
 }
 
 function make_user_portfolio_table(response){
+  console.log(response);
   var result = JSON.parse(response);
   console.log(result);
   var table = document.getElementById('user_stock_portfolio');

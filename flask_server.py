@@ -333,17 +333,24 @@ def update():
             # raise Exception("Failed to retrieve data from alpha_vantage")
             print(stock + " failed")
             continue
-        adding_table = Stock(name=stock)    #Create new table that we will add minute and day time data --> purpose is to be merged with existing table
         for key in data.keys():
             #Create a new Time record then add it to the stock
-            if(date not in key):
+            temp_key = key[:10]
+            time_ = connection.execute('SELECT * FROM time WHERE stock_name=\''+stock+'\' AND datetime=\''+temp_key+'\'').first()
+            if(time_ is not None):
                 continue
-            connection.execute('INSERT INTO time(datetime, open_, high, low, close, volume, stock_name) VALUES (\''+key+'\', '+data[key]['1. open']+', '+data[key]['2. high']+', '+data[key]['3. low']+', '+data[key]['4. close']+', '+data[key]['5. volume']+', \''+stock+'\');')
+            # if(date not in key):
+            #     continue
+            connection.execute('INSERT INTO time(datetime, open_, high, low, close, volume, stock_name) VALUES (\''+temp_key+'\', '+data[key]['1. open']+', '+data[key]['2. high']+', '+data[key]['3. low']+', '+data[key]['4. close']+', '+data[key]['5. volume']+', \''+stock+'\');')
         for key in day_data.keys():
             #Create a new Daily record then add it othe stock
-            if(date not in key):
+            temp_key = key[:10]
+            daily_ = connection.execute('SELECT * FROM daily WHERE stock_name=\''+stock+'\' AND day=\''+temp_key+'\'').first()
+            if(daily_ is not None):
                 continue
-            connection.execute('INSERT INTO daily(day, open_, high, low, close, volume, stock_name) VALUES (\''+key+'\', '+day_data[key]['1. open']+', '+day_data[key]['2. high']+', '+day_data[key]['3. low']+', '+day_data[key]['4. close']+', '+day_data[key]['5. volume']+', \''+stock+'\');')
+            # if(date not in key):
+            #     continue
+            connection.execute('INSERT INTO daily(day, open_, high, low, close, volume, stock_name) VALUES (\''+temp_key+'\', '+day_data[key]['1. open']+', '+day_data[key]['2. high']+', '+day_data[key]['3. low']+', '+day_data[key]['4. close']+', '+day_data[key]['5. volume']+', \''+stock+'\');')
         time.sleep(30)
 
     #         day = Daily(day=key, open_=day_data[key]['1. open'], high=day_data[key]['2. high'], low=day_data[key]['3. low'], close=day_data[key]['4. close'], volume=day_data[key]['5. volume'])
@@ -354,7 +361,7 @@ def update():
 @app.route('/portfolio_calculator', methods=['GET'])
 def portfolio_calculator():
     now = datetime.datetime.now()
-    weekday = now.weekday()
+    weekday = datetime.date(now.year, now.month, now.day).weekday()
     if(weekday == 0 or weekday == 6):
         if(weekday == 5):
             date = datetime.date(now.year, now.month, now.day-2).strftime("%Y-%m-%d")
@@ -364,7 +371,16 @@ def portfolio_calculator():
         date = datetime.date(now.year, now.month, now.day-1).strftime("%Y-%m-%d")
     year5_ago = datetime.date(now.year-5, now.month, now.day).strftime("%Y-%m-%d")
     year3_ago = datetime.date(now.year-3, now.month, now.day).strftime("%Y-%m-%d")
+    year1_ago_weekday = datetime.date(now.year-1, now.month, now.day)
+    if(year1_ago_weekday == 0 or year1_ago_weekday == 6):
+        if(year1_ago_weekday == 5):
+            date = datetime.date(now.year, now.month, now.day-2).strftime("%Y-%m-%d")
+        else:
+            date = datetime.date(now.year, now.month, now.day-3).strftime("%Y-%m-%d")
+    else:
+        date = datetime.date(now.year, now.month, now.day-1).strftime("%Y-%m-%d")
     year1_ago = datetime.date(now.year-1, now.month, now.day).strftime("%Y-%m-%d")
+
     user = session.get('user')
     info_dict = {}
     connection = db.engine.connect()
@@ -439,7 +455,6 @@ def portfolio_calculator():
         alpha = realized_return - risk_free_return - beta*(market_return-risk_free_return)
         # print(alpha)
         info_dict[i].append(alpha)
-        print(info_dict[i])
     number_of = """
     SELECT number_of, stock
     FROM users_tracking_stocks
@@ -463,7 +478,12 @@ def portfolio_calculator():
     for row in finding_portfolio_distributions:
         stock = row['stock']
         number_of = int(row['number_of'])
+        print(date)
         price = float(stock_pivot.loc[date, ('open', row['stock'])])
+        print(price)
+        print(year1_ago)
+        last_year_price = float(stock_pivot.loc[year1_ago, ('open', row['stock'])])
+        print(last_year_price)
         value = number_of * price
         realized_return = float((stock_pivot.loc[date, ('open', stock)] - stock_pivot.loc[year1_ago, ('open', stock)]) / stock_pivot.loc[year1_ago, ('open', stock)])
         print(realized_return)
