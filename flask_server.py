@@ -16,6 +16,13 @@ from alpha_vantage.timeseries import TimeSeries     #If something goes wrong wit
 
 #Note: On the actual webserver, will need to CREATE USER with full privileges
 # After creating the user, then create database
+# SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://{username}:{password}@{hostname}/{databasename}".format(
+#     username="cs411proj",
+#     password="Password_123",
+#     hostname="cs411proj.mysql.pythonanywhere-services.com",
+#     databasename="cs411proj$stock_data"
+# )
+# app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://cs411proj:Password_123@localhost/stock_data" #change to mySQL later
 app.config["SQLALCHEMY_POOL_RECYCLE"] = 299
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
