@@ -74,7 +74,7 @@ db.session.commit()
 #     id =
 
 # Begin webscraping
-sss = Scrape()
+# sss = Scrape()
 
 @app.route('/')
 @app.route('/login')
@@ -128,6 +128,7 @@ def check_user():
 def get_stock():
     #Get stock name and get SQLAlchemy database
     stock = request.args.get('stock')
+    stock = stock.upper()
     engine = db.engine
     #Start new session for database
     Session = db.create_session(options={'bind':'dest_db_con'})
@@ -353,8 +354,14 @@ def update():
 @app.route('/portfolio_calculator', methods=['GET'])
 def portfolio_calculator():
     now = datetime.datetime.now()
-    date = datetime.date(now.year, now.month, now.day-1).strftime("%Y-%m-%d")
-    yesterday =datetime.date(now.year, now.month, now.day-2).strftime("%Y-%m-%d")
+    weekday = now.weekday()
+    if(weekday == 0 or weekday == 6):
+        if(weekday == 5):
+            date = datetime.date(now.year, now.month, now.day-2).strftime("%Y-%m-%d")
+        else:
+            date = datetime.date(now.year, now.month, now.day-3).strftime("%Y-%m-%d")
+    else:
+        date = datetime.date(now.year, now.month, now.day-1).strftime("%Y-%m-%d")
     year5_ago = datetime.date(now.year-5, now.month, now.day).strftime("%Y-%m-%d")
     year3_ago = datetime.date(now.year-3, now.month, now.day).strftime("%Y-%m-%d")
     year1_ago = datetime.date(now.year-1, now.month, now.day).strftime("%Y-%m-%d")
