@@ -32,7 +32,7 @@ samples = pd.DataFrame(columns=['gratio', 'bti', 'fval'])
 def optimize_avg_cross(data):
 
     # design variable 1 step size tolerance
-    var1_tol = 2
+    var1_tol = 1
 
     # to store results from simulations, prevents same simulation from being run twice (very important for expensive simulations)
     repeats = pd.DataFrame(columns=['lavg', 'savg', 'fval'])
@@ -135,7 +135,6 @@ def optimize_avg_cross(data):
             savg_step = savg_step / 2
         # TERMINATION CONDITIONS
         # if design variable 1 step size is less than the tolerance
-        print(lavg_step)
         if lavg_step < var1_tol:
             # return optimum design variables
             return center_lavg, center_savg
@@ -144,7 +143,7 @@ def optimize_avg_cross(data):
 def optimize_DUMM(data):
 
     # design variable 1 step size tolerance
-    var1_tol = 0.5
+    var1_tol = 0.1
 
     # to store results from simulations, prevents same simulation from being run twice (very important for expensive simulations)
     repeats = pd.DataFrame(columns=['gratio', 'bti', 'fval'])
@@ -247,7 +246,6 @@ def optimize_DUMM(data):
             bti_step = bti_step / 2
         # TERMINATION CONDITIONS
         # if design variable 1 step size is less than the tolerance
-        print(gratio_step)
         if gratio_step < var1_tol:
             # return optimum design variables
             return center_gratio, center_bti

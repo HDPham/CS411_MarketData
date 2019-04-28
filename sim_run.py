@@ -51,8 +51,8 @@ def generate_surface(stock_name):
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    lavg = np.arange(100, 200, 40)
-    savg = np.arange(30, 80, 10)
+    lavg = np.arange(100, 500, 20)
+    savg = np.arange(18, 98, 4)
     X, Y = np.meshgrid(lavg, savg)
     X = X.flatten()
     Y = Y.flatten()
