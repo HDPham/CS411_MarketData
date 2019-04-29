@@ -32,7 +32,7 @@ samples = pd.DataFrame(columns=['gratio', 'bti', 'fval'])
 def optimize_avg_cross(data):
 
     # design variable 1 step size tolerance
-    var1_tol = 1
+    var1_tol = 2
 
     # to store results from simulations, prevents same simulation from being run twice (very important for expensive simulations)
     repeats = pd.DataFrame(columns=['lavg', 'savg', 'fval'])

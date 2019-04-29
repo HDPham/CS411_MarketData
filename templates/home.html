@@ -158,14 +158,7 @@
       </div>
 
       <br />
-
-      <!-- <div class="d-flex justify-content-center">
-        <input id="perf1" type="text" />
-        <input id="perf2" type="text" />
-        <input id="perf3" type="text" />
-        <button id="performancebtn" type="button" onclick="call_performance()"></button>
-      <br />
-       -->
+      
       <div class="text-center">
         <textarea id="compare_stock_result" placeholder="Displays Error Message"></textarea>
       </div>
@@ -173,6 +166,32 @@
       <br />
 
       <div id="stockGraph"></div>
+
+      <br />
+
+      <div class="mx-auto" style="width: 200px;">
+        <form>
+          <div class="form-group input-group">
+            <input id="stocksim" class="form-control" type="text" placeholder="Stock" />
+          </div>
+          <div class="form-group input-group">
+            <input id="lavg" class="form-control" type="text" placeholder="Long Average" />
+          </div>
+          <div class="form-group input-group">
+            <input id="savg" class="form-control" type="text" placeholder="Short Average" />
+          </div>
+          <div class="form-group">
+            <button id="simulate_btn" class="btn-block" type="button" onclick="simulation()">Optimize</button>
+          </div>
+        </form>
+      </div>
+
+      <br />
+
+      <div class="text-center">
+        <textarea id="error_msg" placeholder="Displays Error Message"></textarea>
+      </div>
+
     </div>
     <!-- <div id='user_hold' >{{user|safe}}</div> -->
     <div id='current_stock' style='display: none'></div>

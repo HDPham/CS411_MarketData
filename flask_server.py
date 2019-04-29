@@ -1,8 +1,10 @@
 from flask import Flask, jsonify, render_template, request, Response, session
 from us_treasury_scrap import web_scrap_treasury
+from sim_run import avgco_simopt
 import json, datetime, atexit, time
 import pandas as pd, pandas.io.sql as psql
 import numpy as np
+import matplotlib.pyplot as plt
 from scraper import Scrape
 app = Flask(__name__, template_folder='templates')
 app.secret_key = '99qVu2YPjy5ss0Z66Igj'
@@ -431,11 +433,20 @@ def portfolio_calculator():
         print(realized_return)
 
 
-
     return json.dumps(info_dict)
+
 @atexit.register
 def clean_up():
     session.clear()
 
 if __name__ == '__main__':
     app.run()
+
+
+@app.route('/simulation', methods=['GET'])
+def simulation():
+    stock = request.args.get('stock')
+    lavg = request.args.get('lavg')
+    savg = request.args.get('savg')
+    avgco_simopt(stock, int(lavg), int(savg))
+    return Response(None)

@@ -141,3 +141,22 @@ function call_update(){
     }
   });
 }
+
+function simulation() {
+  document.getElementById('error_msg').value = 'Robot Loading...';
+  $.ajax({
+    url: 'simulation',
+    type: 'GET',
+    data: {
+      stock: $('#stocksim').val(),
+      lavg: $('#lavg').val(),
+      savg: $('#savg').val()
+    },
+    success: function(response) {
+      document.getElementById('error_msg').value = 'Simulation success';
+    },
+    error: function(response) {
+      document.getElementById('error_msg').value = 'Sorry, something went wrong';
+    }
+  });
+}
