@@ -15,8 +15,6 @@ from flask_sqlalchemy import SQLAlchemy
 #Get stock data API
 from alpha_vantage.timeseries import TimeSeries     #If something goes wrong with stock data stuff, it's here
 
-app = Flask(__name__, template_folder='templates')
-
 # Note: On the actual webserver, will need to CREATE USER with full privileges
 # After creating the user, then create database
 # SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://{username}:{password}@{hostname}/{databasename}".format(
