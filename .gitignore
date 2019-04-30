@@ -127,7 +127,13 @@ dmypy.json
 
 ### Pythonanywhere
 
+.local/
+.virtualenvs/
+.bashrc
+.gitconfig
 .my.cnf
 .mysql_history
+.profile
+.pythonstartup.py
 .viminfo
-.virtualenvs
+.vimrc
