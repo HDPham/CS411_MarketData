@@ -83,11 +83,7 @@ db.session.commit()
 #     id =
 
 # Begin webscraping
-<<<<<<< HEAD
-#sss = Scrape(db)
-=======
 # sss = Scrape()
->>>>>>> origin/portfolio_fix
 
 @app.route('/')
 @app.route('/login')
