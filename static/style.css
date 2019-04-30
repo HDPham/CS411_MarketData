@@ -1,8 +1,17 @@
-body{
-  margin: 0;
-  font-family: 'Vollkorn', Georgia, Times, serif;
-  font-size: 16px;
+html, body {
+  height: 100%;
 }
-#searchbutton {
-    /* visibility: hidden; */
+
+body {
+  font-family: Helvetica, 'Vollkorn', Georgia, Times, serif;
+}
+
+td {
+  width:50%
+}
+
+.vert-align {
+  display: flex;
+  flex-direction:column;
+  justify-content: center;
 }

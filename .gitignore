@@ -1,3 +1,11 @@
+### Our Project
+
+flask_server_live.py
+
+
+
+### Python
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -114,3 +122,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+
+### Pythonanywhere
+
+.my.cnf
+.mysql_history
+.viminfo
+.virtualenvs
