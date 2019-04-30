@@ -1,9 +1,12 @@
 from flask import Flask, render_template, request, Response, session
 from us_treasury_scrap import web_scrap_treasury
 # from numpy import linalg as la
+from sim_run import avgco_simopt
 import json, datetime, atexit, time
 import pandas as pd, pandas.io.sql as psql
 import numpy as np
+import matplotlib.pyplot as plt
+from scraper import Scrape
 app = Flask(__name__, template_folder='templates')
 app.secret_key = '99qVu2YPjy5ss0Z66Igj'
 
@@ -71,6 +74,9 @@ db.create_all() #don't know if this works but let's try?
 db.session.commit()
 # class User(db.Model):
 #     id =
+
+# Begin webscraping
+#sss = Scrape(db)
 
 @app.route('/')
 @app.route('/login')
@@ -155,6 +161,11 @@ def get_stock():
         raise Exception("Failed to retrieve data from alpha_vantage")
     #Create a new table
     new_table = Stock(name=stock)
+
+    #if (stock not in sss.stock_list):
+    #    sss.stock_list.append(stock)
+    #    sss.collect_data(len(sss.stock_list)-1)
+
     # The only thing we might have to adjust is inserting into the database
     for key in data.keys():
         time = Time(datetime=key, open_=data[key]['1. open'], high=data[key]['2. high'], low=data[key]['3. low'], close=data[key]['4. close'], volume=data[key]['5. volume'])
@@ -469,3 +480,12 @@ def clean_up():
 
 if __name__ == '__main__':
     app.run()
+
+
+@app.route('/simulation', methods=['GET'])
+def simulation():
+    stock = request.args.get('stock')
+    lavg = request.args.get('lavg')
+    savg = request.args.get('savg')
+    avgco_simopt(stock, int(lavg), int(savg))
+    return Response(None)

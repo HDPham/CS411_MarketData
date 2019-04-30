@@ -158,7 +158,7 @@
       </div>
 
       <br />
-
+      
       <div class="text-center">
         <textarea id="compare_stock_result" placeholder="Displays Error Message"></textarea>
       </div>
@@ -172,13 +172,16 @@
       <div class="mx-auto" style="width: 200px;">
         <form>
           <div class="form-group input-group">
-            <input id="input1" class="form-control" type="text" />
+            <input id="stocksim" class="form-control" type="text" placeholder="Stock" />
           </div>
           <div class="form-group input-group">
-            <input id="input2" class="form-control" type="text" />
+            <input id="lavg" class="form-control" type="text" placeholder="Long Average" />
+          </div>
+          <div class="form-group input-group">
+            <input id="savg" class="form-control" type="text" placeholder="Short Average" />
           </div>
           <div class="form-group">
-            <button id="simulate_btn" class="btn-block" type="submit" onclick="simulation()">Generate</button>
+            <button id="simulate_btn" class="btn-block" type="button" onclick="simulation()">Optimize</button>
           </div>
         </form>
       </div>
@@ -186,7 +189,6 @@
       <br />
 
       <div class="text-center">
-        <div id="simulation_result"></div>
         <textarea id="error_msg" placeholder="Displays Error Message"></textarea>
       </div>
 

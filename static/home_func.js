@@ -141,6 +141,7 @@ function call_update(){
     }
   });
 }
+
 // Inspiration and credit for code goes to Danny Pule on medium ; https://medium.com/@danny.pule/export-json-to-csv-file-using-javascript-a0b7bc5b00d2
 function convert_to_csv(){
   var stock = document.getElementById("searchbox").value;
@@ -178,20 +179,20 @@ function convert_to_csv(){
 }
 
 function simulation() {
+  document.getElementById('error_msg').value = 'Robot Loading...';
   $.ajax({
-    url: '/get_stock',
+    url: 'simulation',
     type: 'GET',
     data: {
-      stock: $('#searchbox').val(),
-      input1: $('#input1').val(),
-      input2: $('#input2').val()
+      stock: $('#stocksim').val(),
+      lavg: $('#lavg').val(),
+      savg: $('#savg').val()
     },
-    dataType: "json",
     success: function(response) {
-
+      document.getElementById('error_msg').value = 'Simulation success';
     },
     error: function(response) {
-      document.getElementById("error_msg").value = "Sorry, something went wrong";
+      document.getElementById('error_msg').value = 'Sorry, something went wrong';
     }
   });
 }
