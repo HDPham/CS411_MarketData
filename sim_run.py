@@ -108,5 +108,5 @@ def avgco_simopt(stock_name, lavg_in, savg_in):
     ax[1,1].yaxis.set_major_formatter(tick)
     ax[1,1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), shadow=True, ncol=2, prop={'size': 6})
 
-    plt.show()
+    plt.savefig('static/simulation.png')
     plt.close()

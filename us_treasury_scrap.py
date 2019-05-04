@@ -7,7 +7,10 @@ def web_scrap_treasury():
     now = datetime.datetime.now()
     #Convert today into acceptable datetime string
     date = datetime.date(now.year, now.month, now.day-1).strftime("%Y-%m-%d")
-    page = requests.get('https://data.treasury.gov/feed.svc/DailyTreasuryBillRateData?$filter=month(INDEX_DATE)%20eq%204%20and%20year(INDEX_DATE)%20eq%202019')
+    try:
+        page = requests.get('https://data.treasury.gov/feed.svc/DailyTreasuryBillRateData?$filter=month(INDEX_DATE)%20eq%204%20and%20year(INDEX_DATE)%20eq%202019')
+    except:
+        return 2.38
     tree = etree.parse(BytesIO(page.content))
 
     root = tree.getroot()

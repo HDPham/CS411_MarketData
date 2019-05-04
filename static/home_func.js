@@ -189,6 +189,7 @@ function simulation() {
       savg: $('#savg').val()
     },
     success: function(response) {
+      location.reload();
       document.getElementById('error_msg').value = 'Simulation success';
     },
     error: function(response) {
