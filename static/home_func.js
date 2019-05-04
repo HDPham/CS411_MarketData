@@ -179,7 +179,7 @@ function convert_to_csv(){
 }
 
 function simulation() {
-  document.getElementById('error_msg').value = 'Robot Loading...';
+  document.getElementById('error_msg').value = 'Loading Simulation Results...';
   $.ajax({
     url: 'simulation',
     type: 'GET',

@@ -2,10 +2,11 @@ from flask import Flask, render_template, request, Response, session
 from us_treasury_scrap import web_scrap_treasury
 # from numpy import linalg as la
 from sim_run import avgco_simopt
+from sim_run import SimCon
 import json, datetime, atexit, time
 import pandas as pd, pandas.io.sql as psql
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from scraper import Scrape
 app = Flask(__name__, template_folder='templates')
 app.secret_key = '99qVu2YPjy5ss0Z66Igj'
@@ -28,6 +29,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://cs411proj:Password_123@localhos
 app.config["SQLALCHEMY_POOL_RECYCLE"] = 299
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+SimCon.db = db
 
 metadata = db.metadata
 
