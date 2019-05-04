@@ -188,8 +188,10 @@ function simulation() {
       lavg: $('#lavg').val(),
       savg: $('#savg').val()
     },
+    cache: false,
     success: function(response) {
-      location.reload();
+      date = new Date();
+      $('#sim_img').attr('src', '/static/simulation.png' + date.getTime());
       document.getElementById('error_msg').value = 'Simulation success';
     },
     error: function(response) {
